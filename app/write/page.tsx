@@ -1,0 +1,464 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { AuthProvider } from '@/contexts/AuthContext';
+import Navbar from '@/components/Navbar';
+import { Sparkles, Plus, Loader2, Lock, Unlock, Save, Eye, EyeOff, ArrowRight, X } from 'lucide-react';
+
+const GENRES = ['Sci-Fi', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Thriller', 'Literary Fiction', 'Adventure', 'Dystopian'];
+
+function WriteContent() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  const [step, setStep] = useState<'story' | 'version'>('story');
+  const [storyForm, setStoryForm] = useState({
+    title: '', description: '', genre: [] as string[], tags: '', language: 'en',
+  });
+  const [versionForm, setVersionForm] = useState({
+    title: '', content: '', summary: '', isFree: true, price: 1.99,
+  });
+  const [createdStory, setCreatedStory] = useState<{ slug: string; _id: string; title: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [showAiPanel, setShowAiPanel] = useState(false);
+  const [error, setError] = useState('');
+  const [preview, setPreview] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !user) router.push('/auth/login');
+  }, [user, authLoading, router]);
+
+  const toggleGenre = (g: string) => {
+    setStoryForm((f) => ({
+      ...f,
+      genre: f.genre.includes(g) ? f.genre.filter((x) => x !== g) : [...f.genre, g],
+    }));
+  };
+
+  const createStory = async () => {
+    if (!storyForm.title || !storyForm.description) {
+      setError('Title and description are required');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    const res = await fetch('/api/stories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...storyForm,
+        tags: storyForm.tags.split(',').map((t) => t.trim()).filter(Boolean),
+      }),
+    });
+    const data = await res.json();
+    setSaving(false);
+    if (res.ok) {
+      setCreatedStory(data.story);
+      setStep('version');
+    } else {
+      setError(data.error);
+    }
+  };
+
+  const saveVersion = async (publish = false) => {
+    if (!versionForm.title || !versionForm.content) {
+      setError('Version title and content are required');
+      return;
+    }
+    if (!createdStory) return;
+    setSaving(true);
+    setError('');
+
+    // First save the version
+    const vRes = await fetch(`/api/stories/${createdStory.slug}/versions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(versionForm),
+    });
+
+    if (!vRes.ok) {
+      const d = await vRes.json();
+      setError(d.error);
+      setSaving(false);
+      return;
+    }
+
+    if (publish) {
+      // Publish the story
+      await fetch(`/api/stories/${createdStory.slug}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPublished: true }),
+      });
+      router.push(`/story/${createdStory.slug}`);
+    } else {
+      setSaving(false);
+      setVersionForm({ title: '', content: '', summary: '', isFree: true, price: 1.99 });
+    }
+  };
+
+  const generateWithAI = async (type: 'story' | 'alternate-ending' | 'description') => {
+    if (!aiPrompt) return;
+    setAiLoading(true);
+    const res = await fetch('/api/ai/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type,
+        prompt: aiPrompt,
+        storyTitle: storyForm.title || createdStory?.title,
+        storyDescription: storyForm.description,
+        genre: storyForm.genre[0],
+      }),
+    });
+    const data = await res.json();
+    setAiLoading(false);
+    if (data.content) {
+      if (type === 'description') {
+        setStoryForm((f) => ({ ...f, description: data.content }));
+      } else {
+        setVersionForm((f) => ({ ...f, content: f.content + (f.content ? '\n\n' : '') + data.content }));
+      }
+      setShowAiPanel(false);
+      setAiPrompt('');
+    }
+  };
+
+  const generateTitles = async () => {
+    if (!aiPrompt) return;
+    setAiLoading(true);
+    const res = await fetch('/api/ai/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'title', prompt: aiPrompt, genre: storyForm.genre[0] }),
+    });
+    const data = await res.json();
+    setAiLoading(false);
+    if (data.titles?.length > 0) {
+      setStoryForm((f) => ({ ...f, title: data.titles[0] }));
+    }
+  };
+
+  if (authLoading || !user) return null;
+
+  return (
+    <div className="min-h-screen bg-[var(--void)]">
+      <Navbar />
+
+      <div className="max-w-4xl mx-auto px-6 pt-24 pb-20">
+        {/* Header */}
+        <div className="mb-10">
+          <p className="text-xs font-mono tracking-widest text-[var(--aurora)] mb-3">STUDIO</p>
+          <h1 className="font-display text-5xl font-light text-[var(--text-bright)]">
+            {step === 'story' ? 'New story' : `${createdStory?.title}`}
+          </h1>
+        </div>
+
+        {/* Step indicator */}
+        <div className="flex items-center gap-4 mb-10">
+          {['story', 'version'].map((s, i) => (
+            <div key={s} className="flex items-center gap-3">
+              <div className={`w-8 h-8 border flex items-center justify-center text-xs font-mono transition-all ${
+                step === s ? 'border-[var(--aurora)] text-[var(--aurora)] bg-[var(--aurora)]/10' :
+                (i === 1 && createdStory) ? 'border-emerald-500 text-emerald-500' :
+                'border-[var(--border)] text-[var(--muted)]'
+              }`}>
+                {i + 1}
+              </div>
+              <span className={`text-xs font-mono tracking-wider ${step === s ? 'text-[var(--text)]' : 'text-[var(--muted)]'}`}>
+                {s === 'story' ? 'STORY META' : 'ADD VERSION'}
+              </span>
+              {i === 0 && <ArrowRight size={14} className="text-[var(--muted)]" />}
+            </div>
+          ))}
+        </div>
+
+        {error && (
+          <div className="bg-[var(--pulse)]/10 border border-[var(--pulse)]/30 text-[var(--pulse)] text-sm px-4 py-3 mb-6">
+            {error}
+          </div>
+        )}
+
+        {/* Story step */}
+        {step === 'story' && (
+          <div className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-1.5 md:col-span-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-mono tracking-widest text-[var(--text-dim)] uppercase">Title</label>
+                  <button
+                    onClick={generateTitles}
+                    className="flex items-center gap-1 text-xs text-[var(--aurora)] hover:text-[var(--text)] transition-colors"
+                  >
+                    <Sparkles size={11} /> AI suggest
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  className="input-base"
+                  placeholder="The last light of parallel worlds..."
+                  value={storyForm.title}
+                  onChange={(e) => setStoryForm({ ...storyForm, title: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-1.5 md:col-span-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-mono tracking-widest text-[var(--text-dim)] uppercase">Description</label>
+                  <button
+                    onClick={() => setShowAiPanel(true)}
+                    className="flex items-center gap-1 text-xs text-[var(--aurora)] hover:text-[var(--text)] transition-colors"
+                  >
+                    <Sparkles size={11} /> AI write
+                  </button>
+                </div>
+                <textarea
+                  className="input-base resize-none"
+                  rows={4}
+                  placeholder="A captivating hook that makes readers desperate to explore every version..."
+                  value={storyForm.description}
+                  onChange={(e) => setStoryForm({ ...storyForm, description: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-xs font-mono tracking-widest text-[var(--text-dim)] uppercase">Genres</label>
+              <div className="flex flex-wrap gap-2">
+                {GENRES.map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => toggleGenre(g)}
+                    className={`px-3 py-1.5 text-xs font-mono border transition-all ${
+                      storyForm.genre.includes(g)
+                        ? 'border-[var(--aurora)] text-[var(--aurora)] bg-[var(--aurora)]/10'
+                        : 'border-[var(--border)] text-[var(--text-dim)] hover:border-[var(--border-soft)]'
+                    }`}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-mono tracking-widest text-[var(--text-dim)] uppercase">Tags <span className="text-[var(--muted)]">(comma-separated)</span></label>
+              <input
+                type="text"
+                className="input-base"
+                placeholder="time-travel, redemption, dystopia"
+                value={storyForm.tags}
+                onChange={(e) => setStoryForm({ ...storyForm, tags: e.target.value })}
+              />
+            </div>
+
+            <div className="flex justify-end pt-4">
+              <button onClick={createStory} className="btn-primary" disabled={saving}>
+                {saving ? <Loader2 size={16} className="animate-spin" /> : null}
+                {saving ? 'Creating...' : 'Continue to writing'}
+                {!saving && <ArrowRight size={16} />}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Version step */}
+        {step === 'version' && createdStory && (
+          <div className="space-y-6">
+            <div className="border border-[var(--border-soft)] bg-[var(--surface)] p-4 text-sm text-[var(--text-dim)]">
+              Writing version for: <span className="text-[var(--text)]">{createdStory.title}</span>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-mono tracking-widest text-[var(--text-dim)] uppercase">Version title</label>
+              <input
+                type="text"
+                className="input-base"
+                placeholder="The original ending / Timeline Alpha / The betrayal..."
+                value={versionForm.title}
+                onChange={(e) => setVersionForm({ ...versionForm, title: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-mono tracking-widest text-[var(--text-dim)] uppercase">Summary <span className="text-[var(--muted)]">(shown in sidebar preview)</span></label>
+              <input
+                type="text"
+                className="input-base"
+                placeholder="Brief teaser without spoilers..."
+                value={versionForm.summary}
+                onChange={(e) => setVersionForm({ ...versionForm, summary: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono tracking-widest text-[var(--text-dim)] uppercase">Content</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowAiPanel(true)}
+                    className="flex items-center gap-1 text-xs text-[var(--aurora)] hover:text-[var(--text)] transition-colors"
+                  >
+                    <Sparkles size={11} /> AI assist
+                  </button>
+                  <button
+                    onClick={() => setPreview(!preview)}
+                    className="flex items-center gap-1 text-xs text-[var(--text-dim)] hover:text-[var(--text)] transition-colors"
+                  >
+                    {preview ? <EyeOff size={11} /> : <Eye size={11} />}
+                    {preview ? 'Edit' : 'Preview'}
+                  </button>
+                </div>
+              </div>
+
+              {preview ? (
+                <div className="story-prose bg-[var(--deep)] border border-[var(--border)] p-6 min-h-64"
+                  dangerouslySetInnerHTML={{ __html: versionForm.content.replace(/\n/g, '<br />') || '<em style="color:var(--muted)">Nothing to preview yet.</em>' }} />
+              ) : (
+                <textarea
+                  className="input-base resize-none font-[Georgia,serif] text-base leading-relaxed"
+                  rows={20}
+                  placeholder="Begin your story here..."
+                  value={versionForm.content}
+                  onChange={(e) => setVersionForm({ ...versionForm, content: e.target.value })}
+                />
+              )}
+              <p className="text-xs text-[var(--muted)] font-mono">
+                {versionForm.content.split(/\s+/).filter(Boolean).length} words
+              </p>
+            </div>
+
+            {/* Pricing */}
+            <div className="border border-[var(--border)] p-6 space-y-4">
+              <h3 className="text-xs font-mono tracking-widest text-[var(--text-dim)] uppercase">Version access</h3>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setVersionForm({ ...versionForm, isFree: true })}
+                  className={`flex items-center gap-2 flex-1 p-3 border text-sm transition-all ${
+                    versionForm.isFree ? 'border-emerald-500 text-emerald-500 bg-emerald-500/10' : 'border-[var(--border)] text-[var(--text-dim)]'
+                  }`}
+                >
+                  <Unlock size={14} /> Free to read
+                </button>
+                <button
+                  onClick={() => setVersionForm({ ...versionForm, isFree: false })}
+                  className={`flex items-center gap-2 flex-1 p-3 border text-sm transition-all ${
+                    !versionForm.isFree ? 'border-[var(--gold)] text-[var(--gold)] bg-[var(--gold)]/10' : 'border-[var(--border)] text-[var(--text-dim)]'
+                  }`}
+                >
+                  <Lock size={14} /> Paid version
+                </button>
+              </div>
+
+              {!versionForm.isFree && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-mono tracking-widest text-[var(--text-dim)] uppercase">Price (USD)</label>
+                  <input
+                    type="number"
+                    className="input-base w-32"
+                    min="0.99"
+                    max="99.99"
+                    step="0.50"
+                    value={versionForm.price}
+                    onChange={(e) => setVersionForm({ ...versionForm, price: parseFloat(e.target.value) })}
+                  />
+                  <p className="text-xs text-[var(--muted)]">
+                    You keep ${(versionForm.price * 0.8).toFixed(2)} (80%) per purchase.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 justify-end pt-4">
+              <button
+                onClick={() => saveVersion(false)}
+                className="btn-ghost"
+                disabled={saving}
+              >
+                <Save size={14} /> Save & add more
+              </button>
+              <button
+                onClick={() => saveVersion(true)}
+                className="btn-primary"
+                disabled={saving}
+              >
+                {saving ? <Loader2 size={16} className="animate-spin" /> : null}
+                {saving ? 'Publishing...' : 'Save & publish'}
+                {!saving && <ArrowRight size={16} />}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* AI Panel */}
+        {showAiPanel && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-6">
+            <div className="bg-[var(--deep)] border border-[var(--aurora)] p-8 w-full max-w-lg">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="text-[var(--aurora)]" size={20} />
+                  <h3 className="font-display text-xl font-light text-[var(--text-bright)]">Gemini AI writer</h3>
+                </div>
+                <button onClick={() => setShowAiPanel(false)} className="text-[var(--muted)] hover:text-[var(--text)]">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <textarea
+                className="input-base resize-none mb-4"
+                rows={4}
+                placeholder="Describe what you want to generate... e.g. 'A tense confrontation between old friends in a post-apocalyptic city'"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => generateWithAI(step === 'story' ? 'story' : 'story')}
+                  disabled={aiLoading || !aiPrompt}
+                  className="btn-ghost text-sm justify-center"
+                >
+                  {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                  Generate story
+                </button>
+                {step === 'version' && (
+                  <button
+                    onClick={() => generateWithAI('alternate-ending')}
+                    disabled={aiLoading || !aiPrompt}
+                    className="btn-ghost text-sm justify-center"
+                  >
+                    {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                    Alt ending
+                  </button>
+                )}
+                {step === 'story' && (
+                  <button
+                    onClick={() => generateWithAI('description')}
+                    disabled={aiLoading || !aiPrompt}
+                    className="btn-ghost text-sm justify-center"
+                  >
+                    {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                    Description
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function WritePage() {
+  return (
+    <AuthProvider>
+      <WriteContent />
+    </AuthProvider>
+  );
+}
