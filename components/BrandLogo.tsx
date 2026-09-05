@@ -12,7 +12,7 @@ export default function BrandLogo({
   className = '',
   imageClassName = 'h-10 w-10',
   priority = false,
-  href = '/',
+  href,
 }: BrandLogoProps) {
   const logo = (
     <Image
@@ -25,7 +25,7 @@ export default function BrandLogo({
     />
   );
 
-  return href ? (
+  return href !== undefined ? (
     <Link href={href} aria-label="Multiverse.io home" className={`inline-flex ${className}`}>
       {logo}
     </Link>
