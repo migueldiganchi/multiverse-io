@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import { ArrowRight, GitBranch, Sparkles, Lock, Zap } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 
 export default function HomePage() {
   return (
@@ -22,6 +23,13 @@ export default function HomePage() {
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--aurora)] animate-pulse" />
               INFINITE NARRATIVE ENGINE
             </div>
+
+            <BrandLogo
+              href={undefined}
+              priority
+              imageClassName="h-40 w-40 sm:h-52 sm:w-52 md:h-64 md:w-64 lg:h-72 lg:w-72"
+              className="mx-auto mb-8 animate-float justify-center"
+            />
 
             <h1 className="font-display text-6xl md:text-8xl font-light leading-[0.95] mb-8 animate-fade-in-delay-1">
               <span className="text-[var(--text-bright)]">Every story</span>
@@ -175,12 +183,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        <footer className="border-t border-[var(--border)] py-10 px-6">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <span className="font-mono text-sm text-[var(--text-dim)] tracking-widest">MULTI<span className="text-[var(--aurora)]">VERSE</span>.io</span>
-            <span className="text-xs text-[var(--muted)] font-mono">© {new Date().getFullYear()} — Infinite stories, infinite worlds.</span>
-          </div>
-        </footer>
       </div>
     </AuthProvider>
   );

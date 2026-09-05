@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import PasswordInput from '@/components/PasswordInput';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -47,9 +48,7 @@ function ResetPasswordForm() {
 
       <div className="auth-content">
         <div className="text-center mb-12">
-          <Link href="/" className="auth-logo">
-            MULTI<span className="text-[var(--aurora)]">VERSE</span>.io
-          </Link>
+          <BrandLogo imageClassName="h-24 w-24" className="mx-auto justify-center" priority />
         </div>
 
         <div className="auth-card p-8">

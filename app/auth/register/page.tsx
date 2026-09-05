@@ -5,6 +5,7 @@ import Link from 'next/link';
 import PasswordInput from '@/components/PasswordInput';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 
 function RegisterForm() {
   const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '', displayName: '' });
@@ -78,6 +79,7 @@ function RegisterForm() {
         <div className="pointer-events-none absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-[var(--color-aurora)]/15 blur-3xl" />
         <div className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-[var(--color-gold)]/10 blur-3xl" />
         <div className="auth-content">
+          <BrandLogo imageClassName="h-24 w-24" className="mx-auto mb-8 justify-center" priority />
           <div className="auth-card p-10 text-center sm:p-14">
             <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full border border-[var(--color-gold)]/50 bg-[var(--color-gold)]/10 shadow-[0_0_40px_rgba(200,169,110,0.2)]">
               <CheckCircle2 className="text-[var(--color-gold)]" size={36} />
@@ -102,10 +104,8 @@ function RegisterForm() {
       <div className="pointer-events-none absolute -right-40 bottom-10 h-[30rem] w-[30rem] rounded-full bg-[var(--color-pulse)]/10 blur-3xl" />
 
       <div className="auth-content max-w-6xl">
+        <BrandLogo imageClassName="h-24 w-24" className="mx-auto mb-8 justify-center" priority />
         <div className="hidden lg:block text-center mb-9">
-          <Link href="/" className="mb-4 inline-block font-mono text-sm tracking-[0.35em] text-[var(--color-text-mid)] transition-colors hover:text-[var(--color-text-bright)]">
-            MULTI<span className="text-[var(--color-aurora)]">VERSE</span>.io
-          </Link>
           <div className="max-w-xl mb-6">
             <p className="max-w-md text-base leading-7 text-[var(--color-text-dim)]">
               Step beyond the familiar. Build branching tales, discover impossible worlds, and leave a little magic behind.
@@ -115,9 +115,6 @@ function RegisterForm() {
 
         <div className="w-full max-w-md justify-self-center lg:max-w-none">
           <div className="mb-8 text-center lg:hidden">
-            <Link href="/" className="inline-block font-mono text-lg tracking-widest text-[var(--color-text-mid)] hover:text-[var(--color-text-bright)]">
-              MULTI<span className="text-[var(--color-aurora)]">VERSE</span>.io
-            </Link>
             <p className="mt-3 text-sm text-[var(--color-text-dim)]">Create your narrative universe</p>
           </div>
 

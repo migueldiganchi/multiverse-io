@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 
 function ActivateContent() {
   const searchParams = useSearchParams();
@@ -41,9 +42,7 @@ function ActivateContent() {
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-72 h-72 bg-[var(--aurora)] opacity-[0.05] rounded-full blur-3xl" />
 
       <div className="auth-content text-center">
-        <Link href="/" className="auth-logo mb-16">
-          MULTI<span className="text-[var(--aurora)]">VERSE</span>.io
-        </Link>
+        <BrandLogo imageClassName="h-24 w-24" className="mx-auto mb-16 justify-center" priority />
 
         {status === 'loading' && (
           <div>

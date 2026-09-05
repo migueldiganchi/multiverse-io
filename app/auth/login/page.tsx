@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import PasswordInput from '@/components/PasswordInput';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ArrowRight, AlertCircle } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 
 function LoginForm() {
   const { login } = useAuth();
@@ -39,9 +40,7 @@ function LoginForm() {
       <div className="auth-content">
         {/* Logo */}
         <div className="text-center mb-9">
-          <Link href="/" className="auth-logo">
-            MULTI<span className="text-[var(--aurora)]">VERSE</span>.io
-          </Link>
+          <BrandLogo imageClassName="h-24 w-24" className="mx-auto justify-center" priority />
           <p className="text-[var(--text-dim)] mt-3">Welcome back to your universe</p>
         </div>
 

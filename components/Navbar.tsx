@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import { Menu, X, Sparkles, BookOpen, PenTool, User, LogOut, ChevronDown } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 
 export default function Navbar() {
   const { user, logout, loading } = useAuth();
@@ -15,12 +16,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-8 h-8 relative">
-            <div className="absolute inset-0 bg-[var(--aurora)] opacity-20 rounded-full blur-md group-hover:opacity-40 transition-opacity" />
-            <div className="relative w-full h-full border border-[var(--aurora)] rounded-full flex items-center justify-center">
-              <span className="text-[var(--aurora)] text-xs font-mono font-bold">M</span>
-            </div>
-          </div>
+          <BrandLogo imageClassName="h-10 w-10 transition-transform duration-300 group-hover:scale-110" />
           <span className="font-mono text-sm tracking-widest text-[var(--text-mid)] group-hover:text-[var(--text)] transition-colors">
             MULTI<span className="text-[var(--aurora)]">VERSE</span>.io
           </span>
