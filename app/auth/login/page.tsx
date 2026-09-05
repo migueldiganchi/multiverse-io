@@ -40,7 +40,7 @@ function LoginForm() {
       <div className="auth-content">
         {/* Logo */}
         <div className="text-center mb-9">
-          <BrandLogo imageClassName="h-24 w-24" className="mx-auto justify-center" priority />
+          <BrandLogo href="/" imageClassName="h-24 w-24" className="mx-auto justify-center" priority />
           <p className="text-[var(--text-dim)] mt-3">Welcome back to your universe</p>
         </div>
 

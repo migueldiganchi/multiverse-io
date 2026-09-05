@@ -42,7 +42,7 @@ function ActivateContent() {
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-72 h-72 bg-[var(--aurora)] opacity-[0.05] rounded-full blur-3xl" />
 
       <div className="auth-content text-center">
-        <BrandLogo imageClassName="h-24 w-24" className="mx-auto mb-16 justify-center" priority />
+        <BrandLogo href="/" imageClassName="h-24 w-24" className="mx-auto mb-16 justify-center" priority />
 
         {status === 'loading' && (
           <div>

@@ -79,7 +79,7 @@ function RegisterForm() {
         <div className="pointer-events-none absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-[var(--color-aurora)]/15 blur-3xl" />
         <div className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-[var(--color-gold)]/10 blur-3xl" />
         <div className="auth-content">
-          <BrandLogo imageClassName="h-24 w-24" className="mx-auto mb-8 justify-center" priority />
+          <BrandLogo href="/" imageClassName="h-24 w-24" className="mx-auto mb-8 justify-center" priority />
           <div className="auth-card p-10 text-center sm:p-14">
             <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full border border-[var(--color-gold)]/50 bg-[var(--color-gold)]/10 shadow-[0_0_40px_rgba(200,169,110,0.2)]">
               <CheckCircle2 className="text-[var(--color-gold)]" size={36} />
@@ -104,7 +104,7 @@ function RegisterForm() {
       <div className="pointer-events-none absolute -right-40 bottom-10 h-[30rem] w-[30rem] rounded-full bg-[var(--color-pulse)]/10 blur-3xl" />
 
       <div className="auth-content max-w-md text-center">
-        <BrandLogo imageClassName="h-24 w-24" className="mx-auto mb-8 justify-center" priority />
+        <BrandLogo href="/" imageClassName="h-24 w-24" className="mx-auto mb-8 justify-center" priority />
         <div className="mb-9">
           <p className="mx-auto max-w-md text-base leading-7 text-[var(--color-text-dim)]">
             Step beyond the familiar. Build branching tales, discover impossible worlds, and leave a little magic behind.

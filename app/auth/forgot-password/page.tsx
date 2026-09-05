@@ -35,7 +35,7 @@ function ForgotPasswordForm() {
 
       <div className="auth-content">
         <div className="text-center mb-12">
-          <BrandLogo imageClassName="h-24 w-24" className="mx-auto justify-center" priority />
+          <BrandLogo href="/" imageClassName="h-24 w-24" className="mx-auto justify-center" priority />
         </div>
 
         <div className="auth-card p-8">
