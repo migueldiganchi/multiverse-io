@@ -18,7 +18,7 @@ export default function HomePage() {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-64 bg-gradient-to-b from-transparent via-[var(--aurora)] to-transparent opacity-30" />
           </div>
 
-          <div className="relative z-10 max-w-5xl mx-auto text-center">
+          <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center text-center">
             <div className="inline-flex items-center gap-2 border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-2 text-xs font-mono tracking-widest text-[var(--aurora)] mb-8 animate-fade-in">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--aurora)] animate-pulse" />
               INFINITE NARRATIVE ENGINE
@@ -27,17 +27,17 @@ export default function HomePage() {
             <BrandLogo
               href={undefined}
               priority
-              imageClassName="h-40 w-40 sm:h-52 sm:w-52 md:h-64 md:w-64 lg:h-72 lg:w-72"
-              className="mx-auto mb-8 animate-float justify-center"
+              imageClassName="h-28 w-28 sm:h-32 sm:w-32 md:h-36 md:w-36"
+              className="mb-8 animate-float"
             />
 
-            <h1 className="font-display text-6xl md:text-8xl font-light leading-[0.95] mb-8 animate-fade-in-delay-1">
+            <h1 className="mb-8 text-center font-display text-6xl font-light leading-[0.95] animate-fade-in-delay-1 md:text-8xl">
               <span className="text-[var(--text-bright)]">Every story</span>
               <br />
               <span className="gradient-text italic">branches infinite</span>
             </h1>
 
-            <p className="text-lg text-[var(--text-dim)] max-w-2xl mx-auto mb-12 leading-relaxed animate-fade-in-delay-2 font-light">
+            <p className="mx-auto mb-12 max-w-2xl text-center text-lg font-light leading-relaxed text-[var(--text-dim)] animate-fade-in-delay-2">
               Write stories with alternate endings. Sell the paths untaken.
               Readers explore every version of your universe.
             </p>
