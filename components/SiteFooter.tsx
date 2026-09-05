@@ -12,6 +12,7 @@ export default function SiteFooter() {
         <div className="flex items-center gap-4 text-xs font-mono text-[var(--muted)]">
           <Link href="/terms" className="transition-colors hover:text-[var(--text)]">Terms</Link>
           <Link href="/privacy" className="transition-colors hover:text-[var(--text)]">Privacy</Link>
+          <Link href="/faq" className="transition-colors hover:text-[var(--text)]">FAQ</Link>
           <span>© {new Date().getFullYear()}</span>
         </div>
       </div>
