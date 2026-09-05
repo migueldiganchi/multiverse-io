@@ -94,14 +94,14 @@ export default function PricingPage() {
             {plans.map((plan) => (
               <div
                 key={plan.name}
-                className={`border p-8 relative flex flex-col ${
+                className={`relative flex h-full flex-col border p-8 pt-9 ${
                   plan.featured
                     ? 'border-[var(--aurora)] bg-[var(--surface)]'
                     : 'border-[var(--border)] bg-[var(--deep)]'
                 }`}
               >
                 {plan.featured && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--aurora)] text-white text-[10px] font-mono tracking-widest px-3 py-1">
+                  <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap bg-[var(--color-aurora)] px-4 py-1 text-[10px] font-mono tracking-widest text-white">
                     MOST POPULAR
                   </div>
                 )}
@@ -117,7 +117,7 @@ export default function PricingPage() {
                   <p className="text-sm text-[var(--text-dim)]">{plan.tagline}</p>
                 </div>
 
-                <div className="flex-1 space-y-6 mb-8">
+                <div className="mb-8 flex-1 space-y-6">
                   <div>
                     <p className="text-xs font-mono text-[var(--text-dim)] tracking-wider mb-3">INCLUDED</p>
                     <ul className="space-y-2.5">
@@ -147,7 +147,7 @@ export default function PricingPage() {
 
                 <Link
                   href={plan.href}
-                  className={`block text-center py-3.5 text-sm font-mono tracking-wider transition-all ${
+                  className={`mt-auto block text-center py-3.5 text-sm font-mono tracking-wider transition-all ${
                     plan.featured
                       ? 'bg-[var(--aurora)] text-white hover:bg-[#7d75ff]'
                       : plan.name === 'Writer'

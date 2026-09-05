@@ -116,6 +116,7 @@ export default function HomePage() {
                   features: ['Read all free versions', 'Follow writers', 'Basic library'],
                   cta: 'Start free',
                   accent: 'var(--muted)',
+                  featured: false,
                 },
                 {
                   name: 'Reader',
@@ -133,18 +134,19 @@ export default function HomePage() {
                   features: ['Everything in Reader', 'Unlimited stories', 'AI co-writer', 'Sell versions', '80% revenue share'],
                   cta: 'Start writing',
                   accent: 'var(--gold)',
+                  featured: false,
                 },
               ].map((plan) => (
-                <div key={plan.name} className={`border p-8 relative ${(plan as any).featured ? 'border-[var(--aurora)] bg-[var(--surface)]' : 'border-[var(--border)] bg-[var(--void)]'}`}>
-                  {(plan as any).featured && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--aurora)] text-white text-[10px] font-mono tracking-widest px-3 py-1">MOST POPULAR</div>
+                <div key={plan.name} className={`relative flex h-full flex-col border p-8 pt-9 ${plan.featured ? 'border-[var(--aurora)] bg-[var(--surface)]' : 'border-[var(--border)] bg-[var(--void)]'}`}>
+                  {plan.featured && (
+                    <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap bg-[var(--color-aurora)] px-4 py-1 text-[10px] font-mono tracking-widest text-white">MOST POPULAR</div>
                   )}
                   <p className="text-xs font-mono tracking-widest mb-2" style={{ color: plan.accent }}>{plan.name.toUpperCase()}</p>
                   <div className="flex items-baseline gap-1 mb-2">
                     <span className="font-display text-4xl font-light text-[var(--text-bright)]">{plan.price}</span>
                     <span className="text-sm text-[var(--text-dim)]">{plan.per}</span>
                   </div>
-                  <ul className="space-y-2 my-6">
+                  <ul className="my-6 flex-1 space-y-2">
                     {plan.features.map((f) => (
                       <li key={f} className="flex items-center gap-2 text-sm text-[var(--text-mid)]">
                         <div className="w-1 h-1 rounded-full" style={{ background: plan.accent }} />
@@ -152,7 +154,7 @@ export default function HomePage() {
                       </li>
                     ))}
                   </ul>
-                  <Link href="/auth/register" className={`block text-center py-3 text-sm font-mono tracking-wider transition-all ${(plan as any).featured ? 'bg-[var(--aurora)] text-white hover:bg-[#7d75ff]' : 'border border-[var(--border-soft)] text-[var(--text-mid)] hover:border-[var(--aurora)]'}`}>
+                  <Link href="/auth/register" className={`mt-auto block text-center py-3 text-sm font-mono tracking-wider transition-all ${plan.featured ? 'bg-[var(--aurora)] text-white hover:bg-[#7d75ff]' : 'border border-[var(--border-soft)] text-[var(--text-mid)] hover:border-[var(--aurora)]'}`}>
                     {plan.cta}
                   </Link>
                 </div>

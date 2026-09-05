@@ -73,12 +73,12 @@ function RegisterForm() {
 
   if (success) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-[var(--color-void)] px-6 py-16">
+      <div className="auth-page">
         <div className="starfield absolute inset-0 opacity-80" />
         <div className="pointer-events-none absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-[var(--color-aurora)]/15 blur-3xl" />
         <div className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-[var(--color-gold)]/10 blur-3xl" />
-        <div className="relative mx-auto flex min-h-[70vh] max-w-2xl items-center justify-center">
-          <div className="glass w-full max-w-lg rounded-[2rem] p-10 text-center shadow-[0_0_80px_rgba(108,99,255,0.12)] sm:p-14">
+        <div className="auth-content">
+          <div className="auth-card p-10 text-center sm:p-14">
             <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full border border-[var(--color-gold)]/50 bg-[var(--color-gold)]/10 shadow-[0_0_40px_rgba(200,169,110,0.2)]">
               <CheckCircle2 className="text-[var(--color-gold)]" size={36} />
             </div>
@@ -96,27 +96,20 @@ function RegisterForm() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[var(--color-void)] px-6 py-10 sm:py-16">
+    <div className="auth-page">
       <div className="starfield absolute inset-0 opacity-90" />
       <div className="pointer-events-none absolute -left-40 top-20 h-[28rem] w-[28rem] rounded-full bg-[var(--color-aurora)]/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-40 bottom-10 h-[30rem] w-[30rem] rounded-full bg-[var(--color-pulse)]/10 blur-3xl" />
 
-      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-[1fr_460px]">
-        <div className="hidden space-y-8 lg:block">
-          <Link href="/" className="inline-block font-mono text-sm tracking-[0.35em] text-[var(--color-text-mid)] transition-colors hover:text-[var(--color-text-bright)]">
+      <div className="auth-content max-w-6xl">
+        <div className="hidden lg:block text-center mb-9">
+          <Link href="/" className="mb-4 inline-block font-mono text-sm tracking-[0.35em] text-[var(--color-text-mid)] transition-colors hover:text-[var(--color-text-bright)]">
             MULTI<span className="text-[var(--color-aurora)]">VERSE</span>.io
           </Link>
-          <div className="max-w-xl">
-            <p className="mb-5 font-mono text-xs uppercase tracking-[0.35em] text-[var(--color-gold)]">A story is a doorway</p>
-            <h1 className="font-display text-7xl font-light leading-[0.9] text-[var(--color-text-bright)]">
-              Write the world<br /><span className="gradient-text italic">you were meant to find.</span>
-            </h1>
-            <p className="mt-7 max-w-md text-base leading-7 text-[var(--color-text-dim)]">
+          <div className="max-w-xl mb-6">
+            <p className="max-w-md text-base leading-7 text-[var(--color-text-dim)]">
               Step beyond the familiar. Build branching tales, discover impossible worlds, and leave a little magic behind.
             </p>
-          </div>
-          <div className="flex items-center gap-3 text-xs font-mono uppercase tracking-[0.2em] text-[var(--color-text-dim)]">
-            <span className="h-px w-12 bg-[var(--color-gold)]" /> Infinite stories · Infinite worlds
           </div>
         </div>
 
@@ -128,7 +121,7 @@ function RegisterForm() {
             <p className="mt-3 text-sm text-[var(--color-text-dim)]">Create your narrative universe</p>
           </div>
 
-          <div className="glass rounded-[1.5rem] p-7 shadow-[0_0_80px_rgba(108,99,255,0.1)] sm:p-9">
+          <div className="auth-card rounded-[1.5rem] p-7 sm:p-9">
             <div className="mb-8">
               <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-[var(--color-gold)]">Begin your journey</p>
               <h2 className="font-display text-4xl font-light text-[var(--color-text-bright)]">Create account</h2>

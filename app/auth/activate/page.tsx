@@ -9,15 +9,11 @@ import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 function ActivateContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(token ? 'loading' : 'error');
+  const [message, setMessage] = useState(token ? '' : 'Invalid activation link');
 
   useEffect(() => {
-    if (!token) {
-      setStatus('error');
-      setMessage('Invalid activation link');
-      return;
-    }
+    if (!token) return;
 
     fetch('/api/auth/activate', {
       method: 'POST',
@@ -41,11 +37,11 @@ function ActivateContent() {
   }, [token]);
 
   return (
-    <div className="min-h-screen bg-[var(--void)] flex items-center justify-center px-6 relative">
+    <div className="auth-page">
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-72 h-72 bg-[var(--aurora)] opacity-[0.05] rounded-full blur-3xl" />
 
-      <div className="relative w-full max-w-md text-center">
-        <Link href="/" className="inline-block font-mono text-lg tracking-widest text-[var(--text-mid)] hover:text-[var(--text)] transition-colors mb-16">
+      <div className="auth-content text-center">
+        <Link href="/" className="auth-logo mb-16">
           MULTI<span className="text-[var(--aurora)]">VERSE</span>.io
         </Link>
 
@@ -57,7 +53,7 @@ function ActivateContent() {
         )}
 
         {status === 'success' && (
-          <div className="border border-[var(--border)] bg-[var(--deep)] p-10">
+          <div className="auth-card p-10">
             <CheckCircle2 className="mx-auto mb-4 text-emerald-500" size={48} />
             <h1 className="font-display text-4xl font-light text-[var(--text-bright)] mb-4">Universe unlocked</h1>
             <p className="text-[var(--text-dim)] mb-8">{message}</p>
@@ -68,7 +64,7 @@ function ActivateContent() {
         )}
 
         {status === 'error' && (
-          <div className="border border-[var(--border)] bg-[var(--deep)] p-10">
+          <div className="auth-card p-10">
             <XCircle className="mx-auto mb-4 text-[var(--pulse)]" size={48} />
             <h1 className="font-display text-3xl font-light text-[var(--text-bright)] mb-4">Activation failed</h1>
             <p className="text-[var(--text-dim)] mb-8">{message}</p>

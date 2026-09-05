@@ -29,23 +29,23 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--void)] flex items-center justify-center px-6 relative">
+    <div className="auth-page">
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/3 left-1/3 w-64 h-64 bg-[var(--aurora)] opacity-[0.05] rounded-full blur-3xl" />
         <div className="absolute bottom-1/3 right-1/3 w-48 h-48 bg-[var(--gold)] opacity-[0.04] rounded-full blur-3xl" />
       </div>
 
-      <div className="relative w-full max-w-md">
+      <div className="auth-content">
         {/* Logo */}
-        <div className="text-center mb-12">
-          <Link href="/" className="inline-block font-mono text-lg tracking-widest text-[var(--text-mid)] hover:text-[var(--text)] transition-colors">
+        <div className="text-center mb-9">
+          <Link href="/" className="auth-logo">
             MULTI<span className="text-[var(--aurora)]">VERSE</span>.io
           </Link>
-          <p className="text-[var(--text-dim)] mt-3 text-sm">Welcome back to your universe</p>
+          <p className="text-[var(--text-dim)] mt-3">Welcome back to your universe</p>
         </div>
 
-        <div className="border border-[var(--border)] bg-[var(--deep)] p-8">
+        <div className="auth-card p-8">
           <h1 className="font-display text-3xl font-light text-[var(--text-bright)] mb-8">Sign in</h1>
 
           {error && (

@@ -33,8 +33,8 @@ export default function StoryCard({ story }: StoryCardProps) {
   const genreColor = GENRE_COLORS[primaryGenre] || 'text-[var(--aurora)] border-[var(--aurora)]';
 
   return (
-    <Link href={`/story/${story.slug}`} className="group block">
-      <article className="border border-[var(--border)] bg-[var(--deep)] hover:border-[var(--aurora-dim)] hover:bg-[var(--surface)] transition-all duration-300 p-6 relative overflow-hidden">
+    <Link href={`/story/${story.slug}`} className="group block h-full">
+      <article className="relative flex h-full min-h-[280px] flex-col overflow-hidden border border-[var(--border)] bg-[var(--deep)] p-6 transition-all duration-300 hover:border-[var(--aurora-dim)] hover:bg-[var(--surface)]">
         {/* Subtle hover glow */}
         <div className="absolute inset-0 bg-gradient-to-br from-[var(--aurora)] to-transparent opacity-0 group-hover:opacity-[0.03] transition-opacity duration-300" />
 
@@ -55,12 +55,12 @@ export default function StoryCard({ story }: StoryCardProps) {
         </h2>
 
         {/* Description */}
-        <p className="text-sm text-[var(--text-dim)] leading-relaxed mb-5 line-clamp-3">
+        <p className="mb-5 line-clamp-3 flex-1 text-sm leading-relaxed text-[var(--text-dim)]">
           {story.description}
         </p>
 
         {/* Footer */}
-        <div className="flex items-center justify-between">
+        <div className="mt-auto flex items-center justify-between">
           <span className="text-xs text-[var(--muted)] font-mono">
             @{story.authorUsername}
           </span>

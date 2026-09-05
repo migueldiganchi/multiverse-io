@@ -42,17 +42,17 @@ function ResetPasswordForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--void)] flex items-center justify-center px-6 relative">
+    <div className="auth-page">
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-64 h-64 bg-[var(--aurora)] opacity-[0.05] rounded-full blur-3xl" />
 
-      <div className="relative w-full max-w-md">
+      <div className="auth-content">
         <div className="text-center mb-12">
-          <Link href="/" className="inline-block font-mono text-lg tracking-widest text-[var(--text-mid)] hover:text-[var(--text)] transition-colors">
+          <Link href="/" className="auth-logo">
             MULTI<span className="text-[var(--aurora)]">VERSE</span>.io
           </Link>
         </div>
 
-        <div className="border border-[var(--border)] bg-[var(--deep)] p-8">
+        <div className="auth-card p-8">
           {success ? (
             <div className="text-center py-4">
               <CheckCircle2 className="mx-auto mb-4 text-emerald-500" size={40} />
