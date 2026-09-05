@@ -16,7 +16,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group">
-          <BrandLogo imageClassName="h-10 w-10 transition-transform duration-300 group-hover:scale-110" />
+          <BrandLogo href={undefined} imageClassName="h-10 w-10 transition-transform duration-300 group-hover:scale-110" />
           <span className="font-mono text-sm tracking-widest text-[var(--text-mid)] group-hover:text-[var(--text)] transition-colors">
             MULTI<span className="text-[var(--aurora)]">VERSE</span>.io
           </span>

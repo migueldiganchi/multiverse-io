@@ -103,22 +103,16 @@ function RegisterForm() {
       <div className="pointer-events-none absolute -left-40 top-20 h-[28rem] w-[28rem] rounded-full bg-[var(--color-aurora)]/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-40 bottom-10 h-[30rem] w-[30rem] rounded-full bg-[var(--color-pulse)]/10 blur-3xl" />
 
-      <div className="auth-content max-w-6xl">
+      <div className="auth-content max-w-md text-center">
         <BrandLogo imageClassName="h-24 w-24" className="mx-auto mb-8 justify-center" priority />
-        <div className="hidden lg:block text-center mb-9">
-          <div className="max-w-xl mb-6">
-            <p className="max-w-md text-base leading-7 text-[var(--color-text-dim)]">
-              Step beyond the familiar. Build branching tales, discover impossible worlds, and leave a little magic behind.
-            </p>
-          </div>
+        <div className="mb-9">
+          <p className="mx-auto max-w-md text-base leading-7 text-[var(--color-text-dim)]">
+            Step beyond the familiar. Build branching tales, discover impossible worlds, and leave a little magic behind.
+          </p>
         </div>
 
-        <div className="w-full max-w-md justify-self-center lg:max-w-none">
-          <div className="mb-8 text-center lg:hidden">
-            <p className="mt-3 text-sm text-[var(--color-text-dim)]">Create your narrative universe</p>
-          </div>
-
-          <div className="auth-card rounded-[1.5rem] p-7 sm:p-9">
+        <div className="w-full">
+          <div className="auth-card rounded-[1.5rem] p-7 text-left sm:p-9">
             <div className="mb-8">
               <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-[var(--color-gold)]">Begin your journey</p>
               <h2 className="font-display text-4xl font-light text-[var(--color-text-bright)]">Create account</h2>
