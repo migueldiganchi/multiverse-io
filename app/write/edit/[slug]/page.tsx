@@ -76,6 +76,10 @@ function EditStoryContent({ slug }: { slug: string }) {
 
   const saveVersionEdit = async () => {
     if (!activeVersion || !story) return;
+    if (!activeVersion.isFree && (!Number.isFinite(activeVersion.price) || activeVersion.price < 0.99)) {
+      setError('Paid versions require a price of at least $0.99');
+      return;
+    }
     setSaving(true);
     const res = await fetch(`/api/stories/${story.slug}/versions`, {
       method: 'PUT',
@@ -94,6 +98,10 @@ function EditStoryContent({ slug }: { slug: string }) {
   const addNewVersion = async () => {
     if (!story || !newVersion.title || !newVersion.content) {
       setError('Title and content required');
+      return;
+    }
+    if (!newVersion.isFree && (!Number.isFinite(newVersion.price) || newVersion.price < 0.99)) {
+      setError('Paid versions require a price of at least $0.99');
       return;
     }
     setSaving(true);
@@ -377,9 +385,11 @@ function EditStoryContent({ slug }: { slug: string }) {
                         min="0.99"
                         max="99.99"
                         step="0.50"
-                        value={showNewVersion ? newVersion.price : activeVersion?.price ?? 1.99}
+                        value={showNewVersion
+                          ? (Number.isFinite(newVersion.price) ? newVersion.price : '')
+                          : (activeVersion && Number.isFinite(activeVersion.price) ? activeVersion.price : '')}
                         onChange={(e) => {
-                          const val = parseFloat(e.target.value);
+                          const val = e.target.value === '' ? 0 : Number(e.target.value);
                           if (showNewVersion) setNewVersion((f) => ({ ...f, price: val }));
                           else setActiveVersion((v) => v ? { ...v, price: val } : v);
                         }}
