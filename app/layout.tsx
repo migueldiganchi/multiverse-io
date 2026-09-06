@@ -11,7 +11,12 @@ export const metadata: Metadata = {
   title: 'Multiverse.io — Infinite Stories, Infinite Worlds',
   description: 'Create stories with alternate endings. Buy and sell narrative versions. Explore infinite fictional universes.',
   icons: {
-    icon: '/icon.png',
+    icon: [
+      { url: '/icon.png', type: 'image/png', sizes: '370x360' },
+      { url: '/multiverse-logo.png', type: 'image/png', sizes: '370x360' },
+    ],
+    shortcut: '/icon.png',
+    apple: '/icon.png',
   },
 };
 
