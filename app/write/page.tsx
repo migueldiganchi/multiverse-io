@@ -449,14 +449,19 @@ function WriteContent() {
           </div>
         )}
 
-        {/* AI Panel */}
+        {!showAiPanel && (
+          <button className="story-assistant-launcher" onClick={() => setShowAiPanel(true)} aria-label="Open story bot">
+            <Sparkles size={17} /> <span>Ask story bot</span>
+          </button>
+        )}
+
+        {/* Floating AI story assistant */}
         {showAiPanel && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-6">
-            <div className="bg-[var(--deep)] border border-[var(--aurora)] p-8 w-full max-w-lg">
+          <div className="story-assistant-panel">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <Sparkles className="text-[var(--aurora)]" size={20} />
-                  <h3 className="font-display text-xl font-light text-[var(--text-bright)]">Gemini AI writer</h3>
+                  <div><h3 className="font-display text-xl font-light text-[var(--text-bright)]">Story bot</h3><p className="text-xs text-[var(--text-dim)]">Tell me what you want to make.</p></div>
                 </div>
                 <button onClick={() => setShowAiPanel(false)} className="text-[var(--muted)] hover:text-[var(--text)]">
                   <X size={18} />
@@ -466,19 +471,24 @@ function WriteContent() {
               <textarea
                 className="input-base resize-none mb-4"
                 rows={4}
-                placeholder="Example: A tense confrontation between old friends..."
+                placeholder="“Create a story about...”, “suggest a title”, or “write the next chapter”..."
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
               />
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="mb-3 flex flex-wrap gap-2">
+                {['Suggest a title', 'Write a mysterious opening', 'Surprise me'].map((suggestion) => (
+                  <button key={suggestion} onClick={() => setAiPrompt(suggestion)} className="rounded-full border border-[var(--border-soft)] px-3 py-1.5 text-[11px] text-[var(--text-dim)] hover:border-[var(--aurora)] hover:text-[var(--text)]">{suggestion}</button>
+                ))}
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <button
                   onClick={() => generateWithAI(step === 'story' ? 'story' : 'story')}
                   disabled={aiLoading || !aiPrompt}
                   className="btn-ghost text-sm justify-center"
                 >
                   {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                  Create story text
+                  Write into editor
                 </button>
                 {step === 'version' && (
                   <button
@@ -487,7 +497,7 @@ function WriteContent() {
                     className="btn-ghost text-sm justify-center"
                   >
                     {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-                    Create alternate ending
+                    Create alternate path
                   </button>
                 )}
                 {step === 'story' && (
@@ -497,11 +507,10 @@ function WriteContent() {
                     className="btn-ghost text-sm justify-center"
                   >
                     {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-                    Write description
+                    Shape the pitch
                   </button>
                 )}
               </div>
-            </div>
           </div>
         )}
       </div>

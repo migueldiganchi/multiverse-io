@@ -8,7 +8,7 @@ import { createLoginUrl } from '@/lib/auth-redirect';
 import Navbar from '@/components/Navbar';
 import {
   ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Clock, Copy, Eye,
-  GitBranch, GitFork, Headphones, Layers3, Link2, Loader2, Lock, Map,
+  Edit3, GitBranch, GitFork, Headphones, Layers3, Link2, Loader2, Lock, Map,
   MessageCircle, Play, Share2, ShoppingCart, Sparkles, Volume2, Video, X,
 } from 'lucide-react';
 
@@ -79,6 +79,7 @@ function StoryContent({ slug }: { slug: string }) {
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<'clone' | 'continue' | 'all' | null>(null);
   const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [readerPreview, setReaderPreview] = useState(false);
 
   const redirectToLogin = () => router.push(createLoginUrl(`${window.location.pathname}${window.location.search}`));
 
@@ -199,6 +200,7 @@ function StoryContent({ slug }: { slug: string }) {
   if (!story) return <div className="flex min-h-screen items-center justify-center bg-[var(--void)]"><div className="text-center"><p className="mb-4 font-display text-3xl text-[var(--text-dim)]">Story not found</p><Link href="/explore" className="btn-ghost">Browse stories</Link></div></div>;
 
   const lockedPaths = story.versions.filter((version) => version.isLocked).length;
+  const showingOwnerTools = isOwner && !readerPreview;
 
   return (
     <div className="min-h-screen bg-[var(--void)]">
@@ -209,6 +211,7 @@ function StoryContent({ slug }: { slug: string }) {
           <div className="flex items-center gap-2">
             <ActionButton icon={<Share2 size={16} />} onClick={handleShare} label="Share story">Share</ActionButton>
             <ActionButton icon={mapOpen ? <X size={16} /> : <Map size={16} />} onClick={() => setMapOpen(!mapOpen)} primary={mapOpen} label="Open story map"><span className="hidden sm:inline">Map</span></ActionButton>
+            {isOwner && <ActionButton icon={readerPreview ? <Edit3 size={16} /> : <Eye size={16} />} onClick={() => setReaderPreview(!readerPreview)} label={readerPreview ? 'Return to creator view' : 'Preview as reader'}>{readerPreview ? 'Creator view' : 'Preview'}</ActionButton>}
           </div>
         </div>
 
@@ -257,10 +260,16 @@ function StoryContent({ slug }: { slug: string }) {
         </article>}
 
         <div className="mt-8 flex flex-wrap justify-center gap-2">
-          {!isOwner && <ActionButton icon={busyAction === 'clone' ? <Loader2 size={16} className="animate-spin" /> : <Copy size={16} />} onClick={handleClone} disabled={busyAction !== null} label="Clone this story">Clone</ActionButton>}
-          {!isOwner && <ActionButton icon={busyAction === 'continue' ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} onClick={handleContinue} disabled={busyAction !== null || selectedVersion?.isLocked} primary label="Create alternate ending">Create alternate</ActionButton>}
-          {lockedPaths > 0 && <ActionButton icon={busyAction === 'all' ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />} onClick={handlePurchaseComplete} disabled={busyAction !== null} label="Unlock all paths">Unlock all</ActionButton>}
-          <Link href={`/u/${story.authorUsername}`} className="story-action-button btn-ghost"><Link2 size={16} /><span>Meet author</span></Link>
+          {showingOwnerTools ? <>
+            <Link href={`/write/edit/${story.slug}`} className="story-action-button btn-primary"><Edit3 size={16} /><span>Edit story</span></Link>
+            <Link href="/dashboard" className="story-action-button btn-ghost"><Layers3 size={16} /><span>Manage story</span></Link>
+            <Link href={`/write/edit/${story.slug}?new=chapter`} className="story-action-button btn-ghost"><GitFork size={16} /><span>Add chapter</span></Link>
+          </> : <>
+            {!isOwner && <ActionButton icon={busyAction === 'clone' ? <Loader2 size={16} className="animate-spin" /> : <Copy size={16} />} onClick={handleClone} disabled={busyAction !== null} label="Clone this story">Clone</ActionButton>}
+            {!isOwner && <ActionButton icon={busyAction === 'continue' ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} onClick={handleContinue} disabled={busyAction !== null || selectedVersion?.isLocked} primary label="Create alternate ending">Create alternate</ActionButton>}
+            {lockedPaths > 0 && <ActionButton icon={busyAction === 'all' ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />} onClick={handlePurchaseComplete} disabled={busyAction !== null} label="Unlock all paths">Unlock all</ActionButton>}
+            {!isOwner && <Link href={`/u/${story.authorUsername}`} className="story-action-button btn-ghost"><Link2 size={16} /><span>Meet author</span></Link>}
+          </>}
         </div>
       </main>
     </div>
