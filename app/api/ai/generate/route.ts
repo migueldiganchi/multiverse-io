@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
 
     const { type, prompt, storyTitle, storyDescription, genre, existingVersions } = await req.json();
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
     let systemPrompt = '';
 

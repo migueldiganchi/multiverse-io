@@ -2,10 +2,11 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
-import { GitBranch, Lock, Unlock, Eye, Clock, ArrowLeft, Loader2, ShoppingCart, Sparkles } from 'lucide-react';
+import { GitBranch, Lock, Unlock, Eye, Clock, ArrowLeft, Loader2, ShoppingCart, Sparkles, Edit3, Copy } from 'lucide-react';
 
 interface Version {
   _id: string;
@@ -35,11 +36,13 @@ interface Story {
 
 function StoryContent({ slug }: { slug: string }) {
   const { user } = useAuth();
+  const router = useRouter();
   const [story, setStory] = useState<Story | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [cloning, setCloning] = useState(false);
 
   useEffect(() => {
     fetch(`/api/stories/${slug}`)
@@ -53,6 +56,18 @@ function StoryContent({ slug }: { slug: string }) {
       })
       .catch(() => setLoading(false));
   }, [slug]);
+
+  const isOwner = user?.username === story?.authorUsername;
+  const handleClone = async () => {
+    if (!user) { router.push('/auth/login'); return; }
+    setCloning(true);
+    setError('');
+    const response = await fetch(`/api/stories/${slug}`, { method: 'POST' });
+    const data = await response.json();
+    setCloning(false);
+    if (response.ok) router.push(`/write/edit/${data.story.slug}`);
+    else setError(data.error || 'Unable to clone this branch');
+  };
 
   const handlePurchase = async (versionId: string) => {
     if (!user) { window.location.href = '/auth/login'; return; }
@@ -102,7 +117,7 @@ function StoryContent({ slug }: { slug: string }) {
         </Link>
 
         {/* Story header */}
-        <div className="mb-12">
+        <div className="mb-8">
           <div className="flex flex-wrap gap-2 mb-4">
             {story.genre.map((g) => (
               <span key={g} className="text-[10px] font-mono tracking-widest border border-[var(--border-soft)] text-[var(--text-dim)] px-2 py-1">
@@ -113,12 +128,26 @@ function StoryContent({ slug }: { slug: string }) {
           <h1 className="font-display text-5xl md:text-6xl font-light text-[var(--text-bright)] mb-4 leading-tight">
             {story.title}
           </h1>
-          <p className="text-[var(--text-dim)] text-lg mb-6 max-w-2xl">{story.description}</p>
+          <p className="text-[var(--text-dim)] text-lg mb-4 max-w-2xl">{story.description}</p>
           <div className="flex items-center gap-6 text-xs text-[var(--muted)] font-mono">
-            <span>@{story.authorUsername}</span>
+            <span className={isOwner ? 'text-[var(--aurora)]' : ''}>
+              {isOwner ? 'YOUR BRANCH' : `BRANCH BY @${story.authorUsername}`}
+            </span>
             <span className="flex items-center gap-1"><Eye size={11} /> {story.totalViews.toLocaleString()}</span>
             <span className="flex items-center gap-1"><Clock size={11} /> {story.readingTime}m read</span>
             <span className="flex items-center gap-1"><GitBranch size={11} /> {story.versions.length} versions</span>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3">
+            {isOwner ? (
+              <Link href={`/write/edit/${story.slug}`} className="btn-primary text-sm">
+                <Edit3 size={14} /> Edit branch
+              </Link>
+            ) : (
+              <button onClick={handleClone} disabled={cloning} className="btn-ghost text-sm">
+                {cloning ? <Loader2 size={14} className="animate-spin" /> : <Copy size={14} />}
+                {cloning ? 'Cloning...' : 'Clone this branch'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -136,9 +165,17 @@ function StoryContent({ slug }: { slug: string }) {
               <p className="text-sm text-[var(--muted)]">No versions yet.</p>
             ) : (
               story.versions.map((v, i) => (
-                <button
+                <div
                   key={v._id}
                   onClick={() => !v.isLocked && setSelectedVersion(v)}
+                  onKeyDown={(event) => {
+                    if ((event.key === 'Enter' || event.key === ' ') && !v.isLocked) {
+                      event.preventDefault();
+                      setSelectedVersion(v);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={v.isLocked ? -1 : 0}
                   className={`w-full text-left p-4 border transition-all ${
                     selectedVersion?._id === v._id
                       ? 'border-[var(--aurora)] bg-[var(--surface)]'
@@ -180,7 +217,7 @@ function StoryContent({ slug }: { slug: string }) {
                       Unlock for ${v.price.toFixed(2)}
                     </button>
                   )}
-                </button>
+                </div>
               ))
             )}
           </div>

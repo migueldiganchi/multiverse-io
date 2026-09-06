@@ -300,17 +300,34 @@ function EditStoryContent({ slug }: { slug: string }) {
                     }}
                   />
                 ) : (
-                  <textarea
-                    className="input-base resize-none font-[Georgia,serif] text-base leading-relaxed"
-                    rows={18}
-                    placeholder="Write your story..."
-                    value={showNewVersion ? newVersion.content : activeVersion?.content ?? ''}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (showNewVersion) setNewVersion((f) => ({ ...f, content: val }));
-                      else setActiveVersion((v) => v ? { ...v, content: val } : v);
-                    }}
-                  />
+                  <>
+                    <textarea
+                      className="input-base resize-none font-[Georgia,serif] text-base leading-relaxed"
+                      rows={18}
+                      placeholder="Write your story..."
+                      value={showNewVersion ? newVersion.content : activeVersion?.content ?? ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (showNewVersion) setNewVersion((f) => ({ ...f, content: val }));
+                        else setActiveVersion((v) => v ? { ...v, content: val } : v);
+                      }}
+                    />
+                    <p className="mb-4 text-sm leading-6 text-[var(--text-dim)]">
+                      Describe the direction in everyday language, or choose a starting idea:
+                    </p>
+                    <div className="mb-4 flex flex-wrap gap-2">
+                      {['Raise the stakes', 'Reveal a hidden truth', 'Take the story somewhere unexpected'].map((suggestion) => (
+                        <button
+                          key={suggestion}
+                          type="button"
+                          onClick={() => setAiPrompt(suggestion)}
+                          className="rounded-full border border-[var(--border-soft)] px-3 py-1.5 text-xs text-[var(--text-dim)] transition-colors hover:border-[var(--aurora)] hover:text-[var(--text)]"
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </>
                 )}
 
                 {/* Pricing row */}
@@ -436,7 +453,7 @@ function EditStoryContent({ slug }: { slug: string }) {
                 className="btn-ghost text-sm justify-center"
               >
                 {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                Continue story
+                Continue this branch
               </button>
               <button
                 onClick={() => generateAI('alternate-ending')}
@@ -444,7 +461,7 @@ function EditStoryContent({ slug }: { slug: string }) {
                 className="btn-ghost text-sm justify-center"
               >
                 {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <GitBranch size={14} />}
-                Branch reality
+                Create a new branch
               </button>
             </div>
           </div>

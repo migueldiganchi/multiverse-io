@@ -194,7 +194,7 @@ function WriteContent() {
                     onClick={generateTitles}
                     className="flex items-center gap-1 text-xs text-[var(--aurora)] hover:text-[var(--text)] transition-colors"
                   >
-                    <Sparkles size={11} /> AI suggest
+                    <Sparkles size={11} /> Suggest a title
                   </button>
                 </div>
                 <input
@@ -213,8 +213,23 @@ function WriteContent() {
                     onClick={() => setShowAiPanel(true)}
                     className="flex items-center gap-1 text-xs text-[var(--aurora)] hover:text-[var(--text)] transition-colors"
                   >
-                    <Sparkles size={11} /> AI write
+                    <Sparkles size={11} /> Help me write
                   </button>
+                </div>
+                <p className="mb-4 text-sm leading-6 text-[var(--text-dim)]">
+                  Tell Gemini what you want in plain language. You can write a mood, a character, or a single idea.
+                </p>
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {['A mysterious city beneath the ocean', 'A reunion after a timeline split', 'A hopeful ending with a twist'].map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() => setAiPrompt(suggestion)}
+                      className="rounded-full border border-[var(--border-soft)] px-3 py-1.5 text-xs text-[var(--text-dim)] transition-colors hover:border-[var(--aurora)] hover:text-[var(--text)]"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
                 </div>
                 <textarea
                   className="input-base resize-none"
@@ -412,7 +427,7 @@ function WriteContent() {
               <textarea
                 className="input-base resize-none mb-4"
                 rows={4}
-                placeholder="Describe what you want to generate... e.g. 'A tense confrontation between old friends in a post-apocalyptic city'"
+                placeholder="Example: A tense confrontation between old friends..."
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
               />
@@ -424,7 +439,7 @@ function WriteContent() {
                   className="btn-ghost text-sm justify-center"
                 >
                   {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                  Generate story
+                  Create story text
                 </button>
                 {step === 'version' && (
                   <button
@@ -433,7 +448,7 @@ function WriteContent() {
                     className="btn-ghost text-sm justify-center"
                   >
                     {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-                    Alt ending
+                    Create alternate ending
                   </button>
                 )}
                 {step === 'story' && (
@@ -443,7 +458,7 @@ function WriteContent() {
                     className="btn-ghost text-sm justify-center"
                   >
                     {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-                    Description
+                    Write description
                   </button>
                 )}
               </div>

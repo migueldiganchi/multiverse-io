@@ -64,6 +64,16 @@
     @apply border-border;
   }
 
+  button,
+  a,
+  [role='button'] {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
   .site-shell {
     position: relative;
     min-height: 100vh;
