@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
-import { GitBranch, Lock, Unlock, Eye, Clock, ArrowLeft, Loader2, ShoppingCart, Sparkles, Edit3, Copy } from 'lucide-react';
+import { GitBranch, Lock, Unlock, Eye, Clock, ArrowLeft, Loader2, ShoppingCart, Sparkles, Edit3, Copy, ArrowRight } from 'lucide-react';
 
 interface Version {
   _id: string;
@@ -43,6 +43,7 @@ function StoryContent({ slug }: { slug: string }) {
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [cloning, setCloning] = useState(false);
+  const [continuing, setContinuing] = useState(false);
 
   useEffect(() => {
     fetch(`/api/stories/${slug}`)
@@ -69,8 +70,27 @@ function StoryContent({ slug }: { slug: string }) {
     else setError(data.error || 'Unable to clone this branch');
   };
 
+  const handleContinue = async () => {
+    if (!selectedVersion || selectedVersion.isLocked) {
+      setError('Choose an unlocked version to continue the story');
+      return;
+    }
+    if (!user) { router.push('/auth/login'); return; }
+    setContinuing(true);
+    setError('');
+    const response = await fetch(`/api/stories/${slug}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'continue', versionId: selectedVersion._id }),
+    });
+    const data = await response.json();
+    setContinuing(false);
+    if (response.ok) router.push(`/write/edit/${data.story.slug}`);
+    else setError(data.error || 'Unable to create a continuation');
+  };
+
   const handlePurchase = async (versionId: string) => {
-    if (!user) { window.location.href = '/auth/login'; return; }
+    if (!user) { router.push('/auth/login'); return; }
     setPurchasing(versionId);
     setError('');
     const res = await fetch('/api/purchases', {
@@ -141,6 +161,12 @@ function StoryContent({ slug }: { slug: string }) {
           </div>
             </div>
           <div className="flex flex-wrap gap-2 lg:justify-end">
+            {!isOwner && (
+              <button onClick={handleContinue} disabled={continuing || selectedVersion?.isLocked} className="btn-primary whitespace-nowrap text-sm">
+                {continuing ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
+                {continuing ? 'Preparing...' : 'Continue story'}
+              </button>
+            )}
             {isOwner ? (
               <Link href={`/write/edit/${story.slug}`} className="btn-primary whitespace-nowrap text-sm">
                 <Edit3 size={14} /> Edit branch

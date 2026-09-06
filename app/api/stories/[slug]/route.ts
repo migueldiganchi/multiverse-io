@@ -62,19 +62,30 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await connectDB();
     const { slug } = await params;
+    const body = await req.json().catch(() => ({}));
     const source = await Story.findOne({ slug, isPublished: true });
     if (!source) return NextResponse.json({ error: 'Story not found' }, { status: 404 });
     const purchases = await Purchase.find({ buyer: user.userId, story: source._id, status: 'completed' }).lean();
     const purchasedIds = new Set(purchases.map((purchase) => purchase.versionId));
-    const versions = source.versions
+    const accessibleVersions = source.versions
       .filter((version: { isFree: boolean; _id: { toString(): string } }) =>
         source.authorUsername === user.username || version.isFree || purchasedIds.has(version._id.toString()))
+    if (accessibleVersions.length === 0) {
+      return NextResponse.json({ error: 'Purchase a version before creating a continuation' }, { status: 402 });
+    }
+    const isContinuation = body.action === 'continue';
+    const selectedVersion = isContinuation && body.versionId
+      ? accessibleVersions.find((version: { _id: { toString(): string } }) => version._id.toString() === body.versionId)
+      : undefined;
+    if (isContinuation && !selectedVersion) {
+      return NextResponse.json({ error: 'Select an accessible version to continue' }, { status: 400 });
+    }
+    const versions = (selectedVersion ? [selectedVersion] : accessibleVersions)
       .map((version: { title: string; content: string; summary: string }) => ({
         title: version.title, content: version.content, summary: version.summary,
         isFree: true, price: 0, purchasedBy: [], viewCount: 0, likeCount: 0,
       }));
-    if (versions.length === 0) return NextResponse.json({ error: 'Purchase a version before cloning this branch' }, { status: 402 });
-    const title = `Branch of ${source.title}`;
+    const title = isContinuation ? `Continuation of ${source.title}` : `Branch of ${source.title}`;
     const clone = await Story.create({
       title, slug: `${slugify(title, { lower: true, strict: true })}-${uuidv4().slice(0, 8)}`,
       description: source.description, genre: source.genre, tags: source.tags, language: source.language,
