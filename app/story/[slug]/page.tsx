@@ -44,6 +44,7 @@ function StoryContent({ slug }: { slug: string }) {
   const [error, setError] = useState('');
   const [cloning, setCloning] = useState(false);
   const [continuing, setContinuing] = useState(false);
+  const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     fetch(`/api/stories/${slug}`)
@@ -66,8 +67,12 @@ function StoryContent({ slug }: { slug: string }) {
     const response = await fetch(`/api/stories/${slug}`, { method: 'POST' });
     const data = await response.json();
     setCloning(false);
-    if (response.ok) router.push(`/write/edit/${data.story.slug}`);
-    else setError(data.error || 'Unable to clone this branch');
+    if (response.ok) {
+      setNotice({ type: 'success', text: 'Branch cloned. Opening your editable copy...' });
+      router.push(`/write/edit/${data.story.slug}`);
+    } else {
+      setNotice({ type: 'error', text: data.error || 'Unable to clone this branch' });
+    }
   };
 
   const handleContinue = async () => {
@@ -85,8 +90,12 @@ function StoryContent({ slug }: { slug: string }) {
     });
     const data = await response.json();
     setContinuing(false);
-    if (response.ok) router.push(`/write/edit/${data.story.slug}`);
-    else setError(data.error || 'Unable to create a continuation');
+    if (response.ok) {
+      setNotice({ type: 'success', text: 'Continuation created. Opening the editor...' });
+      router.push(`/write/edit/${data.story.slug}`);
+    } else {
+      setNotice({ type: 'error', text: data.error || 'Unable to create a continuation' });
+    }
   };
 
   const handlePurchase = async (versionId: string) => {
@@ -101,9 +110,17 @@ function StoryContent({ slug }: { slug: string }) {
     const data = await res.json();
     setPurchasing(null);
     if (res.ok) {
-      window.location.reload();
+      setStory((current) => current ? {
+        ...current,
+        versions: current.versions.map((version) =>
+          version._id === versionId ? { ...version, hasPurchased: true, isLocked: false } : version),
+      } : current);
+      setSelectedVersion((version) => version?._id === versionId
+        ? { ...version, hasPurchased: true, isLocked: false }
+        : version);
+      setNotice({ type: 'success', text: 'Purchase completed. This version is now unlocked.' });
     } else {
-      setError(data.error);
+      setNotice({ type: 'error', text: data.error || 'Purchase failed' });
     }
   };
 
@@ -186,6 +203,15 @@ function StoryContent({ slug }: { slug: string }) {
             {error}
           </div>
         )}
+        {notice && (
+          <div className={`mb-4 border px-4 py-3 text-sm ${
+            notice.type === 'success'
+              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+              : 'border-[var(--pulse)]/30 bg-[var(--pulse)]/10 text-[var(--pulse)]'
+          }`} role="status">
+            {notice.text}
+          </div>
+        )}
 
         <div className="grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
           {/* Versions sidebar */}
@@ -254,6 +280,31 @@ function StoryContent({ slug }: { slug: string }) {
 
           {/* Content area */}
           <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-xs font-mono tracking-widest text-[var(--text-dim)]">READING MAP</h3>
+              <span className="text-[10px] text-[var(--muted)]">{story.versions.length} paths</span>
+            </div>
+            <div className="mb-5 flex items-center gap-1 overflow-x-auto border border-[var(--border)] bg-[var(--deep)] px-4 py-3">
+              {story.versions.map((version, index) => (
+                <div key={version._id} className="flex shrink-0 items-center gap-1">
+                  <button
+                    onClick={() => !version.isLocked && setSelectedVersion(version)}
+                    disabled={version.isLocked}
+                    className={`flex h-9 min-w-9 items-center justify-center border px-2 text-[10px] font-mono transition-colors ${
+                      selectedVersion?._id === version._id
+                        ? 'border-[var(--aurora)] bg-[var(--aurora)]/15 text-[var(--aurora)]'
+                        : version.isLocked
+                          ? 'border-[var(--border)] text-[var(--muted)]'
+                          : 'border-[var(--border-soft)] text-[var(--text-dim)] hover:border-[var(--aurora)]'
+                    }`}
+                    title={version.title}
+                  >
+                    V{index + 1}
+                  </button>
+                  {index < story.versions.length - 1 && <span className="text-[var(--muted)]">→</span>}
+                </div>
+              ))}
+            </div>
             {selectedVersion ? (
               <div className="border border-[var(--border)] bg-[var(--deep)] p-6 md:p-8">
                 <div className="mb-5 flex items-start justify-between gap-4">
