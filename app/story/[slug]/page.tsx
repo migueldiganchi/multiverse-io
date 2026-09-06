@@ -1,13 +1,16 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { createLoginUrl } from '@/lib/auth-redirect';
 import Navbar from '@/components/Navbar';
-import { GitBranch, Lock, Unlock, Eye, Clock, ArrowLeft, Loader2, ShoppingCart, Sparkles, Edit3, Copy, ArrowRight, ChevronLeft, ChevronRight, Headphones, Video, Map, GitFork } from 'lucide-react';
+import {
+  ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Clock, Copy, Eye,
+  GitBranch, GitFork, Headphones, Layers3, Link2, Loader2, Lock, Map,
+  MessageCircle, Play, Share2, ShoppingCart, Sparkles, Volume2, Video, X,
+} from 'lucide-react';
 
 interface Version {
   _id: string;
@@ -26,7 +29,6 @@ interface Version {
 }
 
 interface Story {
-  _id: string;
   title: string;
   slug: string;
   description: string;
@@ -38,435 +40,234 @@ interface Story {
   createdAt: string;
 }
 
+function ActionButton({
+  icon,
+  children,
+  onClick,
+  disabled,
+  primary = false,
+  label,
+}: {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  primary?: boolean;
+  label: string;
+}) {
+  return (
+    <button
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      disabled={disabled}
+      className={`story-action-button ${primary ? 'btn-primary' : 'btn-ghost'} disabled:opacity-40`}
+    >
+      {icon}<span>{children}</span>
+    </button>
+  );
+}
+
 function StoryContent({ slug }: { slug: string }) {
   const { user } = useAuth();
   const router = useRouter();
   const [story, setStory] = useState<Story | null>(null);
-  const [loading, setLoading] = useState(true);
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
-  const [purchasing, setPurchasing] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  const [cloning, setCloning] = useState(false);
-  const [continuing, setContinuing] = useState(false);
-  const [buyingComplete, setBuyingComplete] = useState(false);
-  const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [page, setPage] = useState(0);
-  const redirectToLogin = () => {
-    router.push(createLoginUrl(`${window.location.pathname}${window.location.search}`));
-  };
+  const [loading, setLoading] = useState(true);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [busyAction, setBusyAction] = useState<'clone' | 'continue' | 'all' | null>(null);
+  const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const redirectToLogin = () => router.push(createLoginUrl(`${window.location.pathname}${window.location.search}`));
 
   useEffect(() => {
     fetch(`/api/stories/${slug}`)
-      .then((r) => r.json())
+      .then((response) => response.json())
       .then((data) => {
         setStory(data.story);
-        if (data.story.versions.length > 0) {
-          setSelectedVersion(data.story.versions[0]);
-        }
+        setSelectedVersion(data.story?.versions?.[0] ?? null);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, [slug]);
 
   const isOwner = user?.username === story?.authorUsername;
-  const pages = selectedVersion
-    ? selectedVersion.content
-      ? selectedVersion.content.split(/\n\s*\n/).reduce<string[]>((result, paragraph) => {
-        const previous = result[result.length - 1];
-        if (previous && previous.length < 760) result[result.length - 1] = `${previous}\n\n${paragraph}`;
-        else result.push(paragraph);
-        return result;
-      }, [])
-      : []
-    : [];
+  const pages = useMemo(() => selectedVersion?.content
+    ? selectedVersion.content.split(/\n\s*\n/).reduce<string[]>((result, paragraph) => {
+      const previous = result[result.length - 1];
+      if (previous && previous.length < 760) result[result.length - 1] = `${previous}\n\n${paragraph}`;
+      else result.push(paragraph);
+      return result;
+    }, [])
+    : [], [selectedVersion]);
   const currentPage = pages[page] ?? '';
+  const progress = pages.length ? ((page + 1) / pages.length) * 100 : 0;
+
+  const selectVersion = (version: Version) => {
+    if (version.isLocked) return;
+    setSelectedVersion(version);
+    setPage(0);
+    setMapOpen(false);
+  };
+
   const goToVersion = (versionId: string) => {
     const next = story?.versions.find((version) => version._id === versionId);
-    if (next && !next.isLocked) {
-      setSelectedVersion(next);
-      setPage(0);
-    }
+    if (next) selectVersion(next);
   };
-  const handleClone = async () => {
-    if (!user) { redirectToLogin(); return; }
-    setCloning(true);
-    setError('');
-    const response = await fetch(`/api/stories/${slug}`, { method: 'POST' });
-    const data = await response.json();
-    setCloning(false);
-    if (response.ok) {
-      setNotice({ type: 'success', text: 'Branch cloned. Opening your editable copy...' });
-      router.push(`/write/edit/${data.story.slug}?created=clone`);
-    } else {
-      setNotice({ type: 'error', text: data.error || 'Unable to clone this branch' });
+
+  const handleShare = async () => {
+    const shareData = { title: story?.title, text: story?.description, url: window.location.href };
+    if (navigator.share) await navigator.share(shareData);
+    else {
+      await navigator.clipboard.writeText(window.location.href);
+      setNotice({ type: 'success', text: 'Link copied. Invite someone into this universe.' });
     }
   };
 
-  const handleContinue = async () => {
-    if (!selectedVersion || selectedVersion.isLocked) {
-      setError('Choose an unlocked version to continue the story');
-      return;
-    }
+  const handleClone = async () => {
     if (!user) { redirectToLogin(); return; }
-    setContinuing(true);
-    setError('');
+    setBusyAction('clone');
+    const response = await fetch(`/api/stories/${slug}`, { method: 'POST' });
+    const data = await response.json();
+    setBusyAction(null);
+    if (response.ok) router.push(`/write/edit/${data.story.slug}?created=clone`);
+    else setNotice({ type: 'error', text: data.error || 'Unable to clone this branch' });
+  };
+
+  const handleContinue = async () => {
+    if (!selectedVersion || selectedVersion.isLocked) return;
+    if (!user) { redirectToLogin(); return; }
+    setBusyAction('continue');
     const response = await fetch(`/api/stories/${slug}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'continue', versionId: selectedVersion._id }),
     });
     const data = await response.json();
-    setContinuing(false);
-    if (response.ok) {
-      setNotice({ type: 'success', text: 'Continuation created. Opening the editor...' });
-      router.push(`/write/edit/${data.story.slug}?created=continuation`);
-    } else {
-      setNotice({ type: 'error', text: data.error || 'Unable to create a continuation' });
-    }
+    setBusyAction(null);
+    if (response.ok) router.push(`/write/edit/${data.story.slug}?created=continuation`);
+    else setNotice({ type: 'error', text: data.error || 'Unable to create a continuation' });
   };
 
   const handlePurchase = async (versionId: string) => {
     if (!user) { redirectToLogin(); return; }
     setPurchasing(versionId);
-    setError('');
-    const res = await fetch('/api/purchases', {
+    const response = await fetch('/api/purchases', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ storySlug: slug, versionId }),
     });
-    const data = await res.json();
+    const data = await response.json();
     setPurchasing(null);
-    if (res.ok) {
-      setStory((current) => current ? {
-        ...current,
-        versions: current.versions.map((version) =>
-          version._id === versionId ? { ...version, hasPurchased: true, isLocked: false } : version),
-      } : current);
-      setSelectedVersion((version) => version?._id === versionId
-        ? { ...version, hasPurchased: true, isLocked: false }
-        : version);
-      setNotice({ type: 'success', text: 'Purchase completed. This version is now unlocked.' });
-    } else {
+    if (!response.ok) {
       setNotice({ type: 'error', text: data.error || 'Purchase failed' });
+      return;
     }
+    setStory((current) => current ? {
+      ...current,
+      versions: current.versions.map((version) => version._id === versionId
+        ? { ...version, hasPurchased: true, isLocked: false } : version),
+    } : current);
+    setSelectedVersion((version) => version?._id === versionId
+      ? { ...version, hasPurchased: true, isLocked: false } : version);
+    setNotice({ type: 'success', text: 'Path unlocked. Keep exploring.' });
   };
 
   const handlePurchaseComplete = async () => {
     if (!user) { redirectToLogin(); return; }
-    setBuyingComplete(true);
+    setBusyAction('all');
     const response = await fetch('/api/purchases', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ storySlug: slug, purchaseAll: true }),
     });
     const data = await response.json();
-    setBuyingComplete(false);
+    setBusyAction(null);
     if (response.ok) {
-      setNotice({ type: 'success', text: 'Complete story unlocked. All paid paths are now available.' });
       setStory((current) => current ? {
         ...current,
         versions: current.versions.map((version) => version.isFree
-          ? version
-          : { ...version, hasPurchased: true, isLocked: false }),
+          ? version : { ...version, hasPurchased: true, isLocked: false }),
       } : current);
-    } else {
-      setNotice({ type: 'error', text: data.error || 'Unable to unlock the complete story' });
-    }
+      setNotice({ type: 'success', text: 'Every path is unlocked. No spoilers, just possibilities.' });
+    } else setNotice({ type: 'error', text: data.error || 'Unable to unlock the story' });
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[var(--void)]">
-        <Loader2 className="text-[var(--aurora)] animate-spin" size={32} />
-      </div>
-    );
-  }
+  if (loading) return <div className="flex min-h-screen items-center justify-center bg-[var(--void)]"><Loader2 className="animate-spin text-[var(--aurora)]" /></div>;
+  if (!story) return <div className="flex min-h-screen items-center justify-center bg-[var(--void)]"><div className="text-center"><p className="mb-4 font-display text-3xl text-[var(--text-dim)]">Story not found</p><Link href="/explore" className="btn-ghost">Browse stories</Link></div></div>;
 
-  if (!story) {
-    return (
-      <div className="min-h-screen bg-[var(--void)] flex items-center justify-center">
-        <div className="text-center">
-          <p className="font-display text-3xl text-[var(--text-dim)] mb-4">Story not found</p>
-          <Link href="/explore" className="btn-ghost">Browse stories</Link>
-        </div>
-      </div>
-    );
-  }
+  const lockedPaths = story.versions.filter((version) => version.isLocked).length;
 
   return (
     <div className="min-h-screen bg-[var(--void)]">
       <Navbar />
-
-      <div className="mx-auto max-w-7xl px-4 pt-20 pb-12 sm:px-6">
-        {/* Back */}
-        <Link href="/explore" className="mb-4 inline-flex items-center gap-2 text-xs text-[var(--text-dim)] hover:text-[var(--text)] transition-colors font-mono">
-          <ArrowLeft size={14} /> BACK TO LIBRARY
-        </Link>
-
-        {/* Story header */}
-        <div className="mb-5 border-y border-[var(--border)] py-4">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-            <div>
-              <div className="mb-2 flex flex-wrap gap-2">
-                {story.genre.map((g) => (
-                  <span key={g} className="text-[10px] font-mono tracking-widest border border-[var(--border-soft)] text-[var(--text-dim)] px-2 py-1">
-                    {g.toUpperCase()}
-                  </span>
-                ))}
-              </div>
-              <h1 className="mb-2 max-w-4xl font-display text-4xl font-light leading-tight text-[var(--text-bright)] sm:text-5xl">
-                {story.title}
-              </h1>
-              <p className="mb-2 max-w-2xl text-base text-[var(--text-dim)]">{story.description}</p>
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-[var(--muted)] font-mono">
-                <span className={isOwner ? 'text-[var(--aurora)]' : ''}>
-                  {isOwner ? 'YOUR BRANCH' : `BRANCH BY @${story.authorUsername}`}
-                </span>
-                <span className="flex items-center gap-1"><Eye size={11} /> {story.totalViews.toLocaleString()}</span>
-                <span className="flex items-center gap-1"><Clock size={11} /> {story.readingTime}m read</span>
-                <span className="flex items-center gap-1"><GitBranch size={11} /> {story.versions.length} versions</span>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2 lg:justify-end">
-              {story.versions.some((version) => !version.isFree && !version.hasPurchased) && (
-                <button onClick={handlePurchaseComplete} disabled={buyingComplete} className="btn-gold whitespace-nowrap text-sm flex items-center gap-1">
-                  {buyingComplete ? <Loader2 size={14} className="animate-spin" /> : <ShoppingCart size={14} />}
-                  {buyingComplete ? 'Unlocking...' : 'Unlock story'}
-                </button>
-              )}
-              {!isOwner && (
-                <button onClick={handleContinue} disabled={continuing || selectedVersion?.isLocked} className="btn-primary whitespace-nowrap text-sm">
-                  {continuing ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
-                  {continuing ? 'Preparing...' : 'Continue story'}
-                </button>
-              )}
-              {isOwner ? (
-                <Link href={`/write/edit/${story.slug}`} className="btn-primary whitespace-nowrap text-sm">
-                  <Edit3 size={14} /> Edit branch
-                </Link>
-              ) : (
-                <button onClick={handleClone} disabled={cloning} className="btn-ghost whitespace-nowrap text-sm">
-                  {cloning ? <Loader2 size={14} className="animate-spin" /> : <Copy size={14} />}
-                  {cloning ? 'Cloning...' : 'Clone this branch'}
-                </button>
-              )}
-            </div>
+      <main className="mx-auto max-w-6xl px-4 pb-20 pt-24 sm:px-6">
+        <div className="mb-8 flex items-center justify-between gap-3">
+          <Link href="/explore" className="inline-flex items-center gap-2 text-xs font-mono text-[var(--text-dim)] transition-colors hover:text-[var(--text)]"><ArrowLeft size={14} /> <span className="hidden sm:inline">BACK TO LIBRARY</span><span className="sm:hidden">LIBRARY</span></Link>
+          <div className="flex items-center gap-2">
+            <ActionButton icon={<Share2 size={16} />} onClick={handleShare} label="Share story">Share</ActionButton>
+            <ActionButton icon={mapOpen ? <X size={16} /> : <Map size={16} />} onClick={() => setMapOpen(!mapOpen)} primary={mapOpen} label="Open story map"><span className="hidden sm:inline">Map</span></ActionButton>
           </div>
         </div>
 
-        {error && (
-          <div className="mb-4 border border-[var(--pulse)]/30 bg-[var(--pulse)]/10 px-4 py-3 text-sm text-[var(--pulse)]">
-            {error}
+        <header className="mb-8 max-w-3xl">
+          <div className="mb-4 flex flex-wrap gap-2">
+            {story.genre.map((genre) => <span key={genre} className="rounded-full border border-[var(--border-soft)] px-3 py-1 text-[10px] font-mono tracking-widest text-[var(--text-dim)]">{genre.toUpperCase()}</span>)}
           </div>
-        )}
-        {notice && (
-          <div className={`mb-4 border px-4 py-3 text-sm ${notice.type === 'success'
-            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-            : 'border-[var(--pulse)]/30 bg-[var(--pulse)]/10 text-[var(--pulse)]'
-            }`} role="status">
-            {notice.text}
+          <h1 className="mb-4 font-display text-5xl font-light leading-[0.95] text-[var(--text-bright)] sm:text-7xl">{story.title}</h1>
+          <p className="max-w-2xl text-base leading-relaxed text-[var(--text-dim)]">{story.description}</p>
+          <div className="mt-5 flex flex-wrap items-center gap-4 text-xs font-mono text-[var(--muted)]">
+            <span className={isOwner ? 'text-[var(--aurora)]' : ''}>{isOwner ? 'YOUR BRANCH' : `@${story.authorUsername}`}</span>
+            <span className="flex items-center gap-1"><Clock size={12} /> {story.readingTime} min</span>
+            <span className="flex items-center gap-1"><GitBranch size={12} /> {story.versions.length} paths</span>
+            <span className="flex items-center gap-1"><Eye size={12} /> {story.totalViews.toLocaleString()}</span>
           </div>
+        </header>
+
+        {notice && <div className={`mb-6 flex items-center justify-between rounded-xl border px-4 py-3 text-sm ${notice.type === 'success' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-[var(--pulse)]/30 bg-[var(--pulse)]/10 text-[var(--pulse)]'}`} role="status"><span>{notice.text}</span><button onClick={() => setNotice(null)} aria-label="Dismiss"><X size={15} /></button></div>}
+
+        {mapOpen && (
+          <section className="story-map mb-8 animate-fade-in" aria-label="Story connections">
+            <div className="mb-5 flex items-center justify-between"><div><p className="eyebrow"><Layers3 size={13} /> YOUR UNIVERSE</p><h2 className="mt-2 font-display text-3xl text-[var(--text-bright)]">Choose your way through</h2></div><span className="text-xs font-mono text-[var(--text-dim)]">{story.versions.length} nodes</span></div>
+            <div className="flex flex-wrap items-center gap-3">
+              {story.versions.map((version, index) => <div key={version._id} className="flex items-center gap-3">
+                <button onClick={() => selectVersion(version)} disabled={version.isLocked} className={`story-node ${selectedVersion?._id === version._id ? 'story-node-active' : ''} ${version.isLocked ? 'story-node-locked' : ''}`}><span>{String(index + 1).padStart(2, '0')}</span><strong>{version.title}</strong>{version.isLocked ? <Lock size={13} /> : <Play size={13} />}</button>
+                {index < story.versions.length - 1 && <ArrowRight size={15} className="text-[var(--muted)]" />}
+              </div>)}
+            </div>
+          </section>
         )}
 
-        <div className="mb-5 flex items-center gap-3 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--deep)]/80 p-3">
-          <Map size={16} className="shrink-0 text-[var(--aurora)]" />
-          <span className="mr-2 shrink-0 text-[10px] font-mono tracking-widest text-[var(--text-dim)]">STORY MAP</span>
-          {story.versions.map((version, index) => (
-            <div key={version._id} className="flex shrink-0 items-center gap-2">
-              <button
-                onClick={() => !version.isLocked && goToVersion(version._id)}
-                disabled={version.isLocked}
-                className={`group flex items-center gap-2 rounded-full border px-3 py-2 text-xs transition-all ${
-                  selectedVersion?._id === version._id
-                    ? 'border-[var(--aurora)] bg-[var(--aurora)]/15 text-[var(--text-bright)] shadow-[0_0_20px_rgba(108,99,255,0.25)]'
-                    : version.isLocked
-                      ? 'border-[var(--border)] text-[var(--muted)]'
-                      : 'border-[var(--border-soft)] text-[var(--text-dim)] hover:-translate-y-0.5 hover:border-[var(--cyan)] hover:text-[var(--text)]'
-                }`}
-              >
-                <span className="font-mono text-[10px]">N{index + 1}</span>
-                <span className="max-w-28 truncate">{version.title}</span>
-                {version.isLocked ? <Lock size={11} /> : <GitFork size={11} />}
-              </button>
-              {index < story.versions.length - 1 && <span className="text-[var(--muted)]">→</span>}
-            </div>
-          ))}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--deep)]/80 px-4 py-3">
+          <div className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--aurora)]/15 text-xs font-mono text-[var(--aurora)]">{selectedVersion ? story.versions.indexOf(selectedVersion) + 1 : 0}</span><div><p className="text-sm text-[var(--text-bright)]">{selectedVersion?.title || 'Start your journey'}</p><p className="text-[10px] font-mono text-[var(--text-dim)]">{lockedPaths ? `${lockedPaths} paths waiting` : 'ALL PATHS OPEN'}</p></div></div>
+          <div className="flex items-center gap-2"><span className="text-[10px] font-mono text-[var(--text-dim)]">{Math.round(progress)}%</span><div className="h-1.5 w-24 overflow-hidden rounded-full bg-[var(--border)]"><div className="h-full rounded-full bg-gradient-to-r from-[var(--aurora)] to-[var(--cyan)] transition-all" style={{ width: `${progress}%` }} /></div></div>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
-          {/* Versions sidebar */}
-          <div className="space-y-2">
-            <h3 className="mb-3 text-xs font-mono tracking-widest text-[var(--text-dim)]">VERSIONS / BRANCHES</h3>
-            {story.versions.length === 0 ? (
-              <p className="text-sm text-[var(--muted)]">No versions yet.</p>
-            ) : (
-              story.versions.map((v, i) => (
-                <div
-                  key={v._id}
-                  onClick={() => !v.isLocked && (setSelectedVersion(v), setPage(0))}
-                  onKeyDown={(event) => {
-                    if ((event.key === 'Enter' || event.key === ' ') && !v.isLocked) {
-                      event.preventDefault();
-                      setSelectedVersion(v);
-                      setPage(0);
-                    }
-                  }}
-                  role="button"
-                  tabIndex={v.isLocked ? -1 : 0}
-                  className={`w-full text-left p-3 border transition-all ${selectedVersion?._id === v._id
-                    ? 'border-[var(--aurora)] bg-[var(--surface)]'
-                    : 'border-[var(--border)] bg-[var(--deep)] hover:border-[var(--border-soft)]'
-                    } ${v.isLocked ? 'opacity-70 cursor-default' : 'cursor-pointer'}`}
-                >
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <span className="text-xs font-mono text-[var(--muted)]">V{i + 1}</span>
-                    {v.isFree ? (
-                      <Unlock size={11} className="text-emerald-500 flex-shrink-0 mt-0.5" />
-                    ) : (
-                      <Lock size={11} className={`flex-shrink-0 mt-0.5 ${v.hasPurchased ? 'text-emerald-500' : 'text-[var(--gold)]'}`} />
-                    )}
-                  </div>
-                  <p className="text-sm text-[var(--text)] font-light leading-snug">{v.title}</p>
-                  {v.summary && <p className="text-xs text-[var(--muted)] mt-1 line-clamp-2">{v.summary}</p>}
-                  {!v.isFree && !v.hasPurchased && (
-                    <div className="mt-3">
-                      <span className="text-xs text-[var(--gold)] font-mono">${v.price.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {!v.isFree && !v.hasPurchased && !v.isLocked && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handlePurchase(v._id); }}
-                      disabled={purchasing === v._id}
-                      className="mt-2 flex items-center gap-1 text-xs text-[var(--gold)] border border-[var(--gold-dim)] px-2 py-1 hover:bg-[var(--gold)]/10 transition-colors"
-                    >
-                      {purchasing === v._id ? <Loader2 size={11} className="animate-spin" /> : <ShoppingCart size={11} />}
-                      Unlock
-                    </button>
-                  )}
-                  {v.isLocked && !v.isFree && !v.hasPurchased && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handlePurchase(v._id); }}
-                      disabled={purchasing === v._id}
-                      className="mt-2 flex items-center gap-1 text-xs text-[var(--gold)] border border-[var(--gold-dim)] px-2 py-1 hover:bg-[var(--gold)]/10 transition-colors w-full justify-center"
-                    >
-                      {purchasing === v._id ? <Loader2 size={11} className="animate-spin" /> : <ShoppingCart size={11} />}
-                      Unlock for ${v.price.toFixed(2)}
-                    </button>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
+        {selectedVersion && <article className="reader-card">
+          <div className="reader-toolbar"><div className="flex items-center gap-2"><span className="eyebrow"><MessageCircle size={13} /> CHAPTER {story.versions.indexOf(selectedVersion) + 1}</span>{selectedVersion.mediaType === 'audio' && <Volume2 size={15} className="text-[var(--aurora)]" />}{selectedVersion.mediaType === 'video' && <Video size={15} className="text-[var(--cyan)]" />}</div><span className="text-xs font-mono text-[var(--text-dim)]">{page + 1} / {Math.max(pages.length, 1)}</span></div>
+          {selectedVersion.isLocked ? <div className="reader-lock"><Lock size={34} className="text-[var(--gold)]" /><h2>This path is waiting for you</h2><p>Unlock this alternate experience for ${selectedVersion.price.toFixed(2)}.</p><button onClick={() => handlePurchase(selectedVersion._id)} disabled={purchasing === selectedVersion._id} className="btn-gold">{purchasing === selectedVersion._id ? <Loader2 size={15} className="animate-spin" /> : <ShoppingCart size={15} />} Unlock path</button></div> : <>
+            {selectedVersion.mediaType === 'audio' && selectedVersion.mediaUrl && <div className="reader-media"><div className="eyebrow"><Headphones size={13} /> AMBIENT SOUND</div><audio className="mt-3 w-full" controls src={selectedVersion.mediaUrl} /></div>}
+            {selectedVersion.mediaType === 'video' && selectedVersion.mediaUrl && <div className="reader-video"><video className="max-h-[34rem] w-full object-contain" controls src={selectedVersion.mediaUrl} /><p className="eyebrow mt-3"><Video size={13} /> IMMERSIVE SCENE</p></div>}
+            <div className="reader-body"><h2>{selectedVersion.title}</h2><div className="story-prose animate-fade-in" key={`${selectedVersion._id}-${page}`} dangerouslySetInnerHTML={{ __html: currentPage.replace(/\n/g, '<br />') }} /></div>
+            <div className="reader-nav"><button onClick={() => setPage((current) => Math.max(current - 1, 0))} disabled={page === 0} className="reader-nav-button"><ChevronLeft size={18} /><span>Previous</span></button><div className="reader-dots">{pages.map((_, index) => <button key={index} aria-label={`Go to page ${index + 1}`} onClick={() => setPage(index)} className={index === page ? 'active' : ''} />)}</div><button onClick={() => setPage((current) => Math.min(current + 1, Math.max(pages.length - 1, 0)))} disabled={page >= pages.length - 1} className="reader-nav-button next"><span>Next</span><ChevronRight size={18} /></button></div>
+            {page >= pages.length - 1 && selectedVersion.choices && selectedVersion.choices.length > 0 && <div className="reader-choices"><p className="eyebrow"><GitFork size={13} /> WHAT HAPPENS NEXT?</p><div className="mt-4 grid gap-3 sm:grid-cols-2">{selectedVersion.choices.map((choice) => <button key={choice.targetVersionId} onClick={() => goToVersion(choice.targetVersionId)} className="choice-card"><span>{choice.label}</span><ArrowRight size={16} /></button>)}</div></div>}
+          </>}
+        </article>}
 
-          {/* Content area */}
-          <div>
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-xs font-mono tracking-widest text-[var(--text-dim)]">READING MAP</h3>
-              <span className="text-[10px] text-[var(--muted)]">{story.versions.length} paths</span>
-            </div>
-            <div className="mb-5 flex items-center gap-1 overflow-x-auto border border-[var(--border)] bg-[var(--deep)] px-4 py-3">
-              {story.versions.map((version, index) => (
-                <div key={version._id} className="flex shrink-0 items-center gap-1">
-                  <button
-                    onClick={() => !version.isLocked && (setSelectedVersion(version), setPage(0))}
-                    disabled={version.isLocked}
-                    className={`flex h-9 min-w-9 items-center justify-center border px-2 text-[10px] font-mono transition-colors ${selectedVersion?._id === version._id
-                      ? 'border-[var(--aurora)] bg-[var(--aurora)]/15 text-[var(--aurora)]'
-                      : version.isLocked
-                        ? 'border-[var(--border)] text-[var(--muted)]'
-                        : 'border-[var(--border-soft)] text-[var(--text-dim)] hover:border-[var(--aurora)]'
-                      }`}
-                    title={version.title}
-                  >
-                    V{index + 1}
-                  </button>
-                  {index < story.versions.length - 1 && <span className="text-[var(--muted)]">→</span>}
-                </div>
-              ))}
-            </div>
-            {selectedVersion ? (
-              <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--deep)] shadow-[0_20px_80px_rgba(0,0,0,0.25)]">
-                <div className="mb-5 flex items-start justify-between gap-4">
-                  <h2 className="font-display text-2xl font-light leading-tight text-[var(--text-bright)]">
-                    {selectedVersion.title}
-                  </h2>
-                  {!selectedVersion.isFree && selectedVersion.hasPurchased && (
-                    <span className="text-xs font-mono text-emerald-500 border border-emerald-500/30 px-2 py-1">PURCHASED</span>
-                  )}
-                </div>
-
-                {selectedVersion.isLocked ? (
-                  <div className="text-center py-10">
-                    <Lock className="mx-auto mb-4 text-[var(--gold)]" size={40} />
-                    <p className="font-display text-2xl font-light text-[var(--text-bright)] mb-3">This version is locked</p>
-                    <p className="text-[var(--text-dim)] mb-6">Unlock this alternate ending for ${selectedVersion.price.toFixed(2)}</p>
-                    <button
-                      onClick={() => handlePurchase(selectedVersion._id)}
-                      disabled={purchasing === selectedVersion._id}
-                      className="btn-gold flex items-center gap-2 mx-auto"
-                    >
-                      {purchasing === selectedVersion._id ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />}
-                      Unlock for ${selectedVersion.price.toFixed(2)}
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    {selectedVersion.mediaType === 'audio' && selectedVersion.mediaUrl && (
-                      <div className="border-b border-[var(--border)] bg-[var(--aurora)]/10 p-5">
-                        <div className="mb-2 flex items-center gap-2 text-xs font-mono tracking-widest text-[var(--aurora)]"><Headphones size={14} /> SOUNDTRACK</div>
-                        <audio className="w-full" controls src={selectedVersion.mediaUrl} />
-                      </div>
-                    )}
-                    {selectedVersion.mediaType === 'video' && selectedVersion.mediaUrl && (
-                      <div className="border-b border-[var(--border)] bg-black p-3">
-                        <video className="max-h-[28rem] w-full rounded-xl object-contain" controls src={selectedVersion.mediaUrl} />
-                        <div className="mt-2 flex items-center gap-2 text-xs font-mono tracking-widest text-[var(--cyan)]"><Video size={14} /> IMMERSIVE SCENE</div>
-                      </div>
-                    )}
-                    <div className="p-6 md:p-10">
-                      <div className="mb-6 flex items-center justify-between gap-4">
-                        <span className="text-[10px] font-mono tracking-widest text-[var(--text-dim)]">PAGE {page + 1} / {Math.max(pages.length, 1)}</span>
-                        <div className="h-1.5 w-32 overflow-hidden rounded-full bg-[var(--border)]">
-                          <div className="h-full rounded-full bg-gradient-to-r from-[var(--aurora)] to-[var(--cyan)] transition-all" style={{ width: `${pages.length ? ((page + 1) / pages.length) * 100 : 100}%` }} />
-                        </div>
-                      </div>
-                      <div className="story-prose min-h-[18rem] animate-fade-in" key={`${selectedVersion._id}-${page}`} dangerouslySetInnerHTML={{ __html: currentPage.replace(/\n/g, '<br />') }} />
-                      <div className="mt-8 flex items-center justify-between border-t border-[var(--border)] pt-5">
-                        <button onClick={() => setPage((current) => Math.max(0, current - 1))} disabled={page === 0} className="btn-ghost flex items-center gap-2 text-xs disabled:opacity-30"><ChevronLeft size={15} /> Previous page</button>
-                        <button onClick={() => setPage((current) => Math.min(Math.max(pages.length - 1, 0), current + 1))} disabled={page >= pages.length - 1} className="btn-primary flex items-center gap-2 text-xs disabled:opacity-30">Next page <ChevronRight size={15} /></button>
-                      </div>
-                    </div>
-                    {page >= pages.length - 1 && selectedVersion.choices && selectedVersion.choices.length > 0 && (
-                      <div className="border-t border-[var(--border)] bg-[var(--surface)] p-6">
-                        <div className="mb-4 flex items-center gap-2 text-xs font-mono tracking-widest text-[var(--gold)]"><GitFork size={14} /> CHOOSE YOUR NEXT PATH</div>
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          {selectedVersion.choices.map((choice) => (
-                            <button key={choice.targetVersionId} onClick={() => goToVersion(choice.targetVersionId)} className="rounded-xl border border-[var(--border-soft)] bg-[var(--deep)] p-4 text-left text-sm text-[var(--text-mid)] transition-all hover:-translate-y-1 hover:border-[var(--gold)] hover:text-[var(--text-bright)]">{choice.label}<ArrowRight size={14} className="mt-2 text-[var(--gold)]" /></button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="border border-[var(--border)] bg-[var(--deep)] p-8 text-center">
-                <Sparkles className="mx-auto mb-4 text-[var(--aurora)]" size={32} />
-                <p className="font-display text-xl text-[var(--text-dim)]">Select a version to start reading</p>
-              </div>
-            )}
-          </div>
+        <div className="mt-8 flex flex-wrap justify-center gap-2">
+          {!isOwner && <ActionButton icon={busyAction === 'clone' ? <Loader2 size={16} className="animate-spin" /> : <Copy size={16} />} onClick={handleClone} disabled={busyAction !== null} label="Clone this story">Clone</ActionButton>}
+          {!isOwner && <ActionButton icon={busyAction === 'continue' ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} onClick={handleContinue} disabled={busyAction !== null || selectedVersion?.isLocked} primary label="Create alternate ending">Create alternate</ActionButton>}
+          {lockedPaths > 0 && <ActionButton icon={busyAction === 'all' ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />} onClick={handlePurchaseComplete} disabled={busyAction !== null} label="Unlock all paths">Unlock all</ActionButton>}
+          <Link href={`/u/${story.authorUsername}`} className="story-action-button btn-ghost"><Link2 size={16} /><span>Meet author</span></Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
 
 export default function StoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  return (
-    <AuthProvider>
-      <StoryContent slug={slug} />
-    </AuthProvider>
-  );
+  return <AuthProvider><StoryContent slug={slug} /></AuthProvider>;
 }
