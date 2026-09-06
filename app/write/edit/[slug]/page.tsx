@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { createLoginUrl } from '@/lib/auth-redirect';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import {
@@ -20,6 +21,9 @@ interface Version {
   price: number | '';
   viewCount: number;
   likeCount: number;
+  mediaType?: 'text' | 'audio' | 'video';
+  mediaUrl?: string;
+  choices?: { label: string; targetVersionId: string }[];
 }
 
 interface Story {
@@ -46,12 +50,14 @@ function EditStoryContent({ slug }: { slug: string }) {
   const [aiPrompt, setAiPrompt] = useState('');
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
-  const [newVersion, setNewVersion] = useState<{ title: string; content: string; summary: string; isFree: boolean; price: number | '' }>({ title: '', content: '', summary: '', isFree: true, price: 1.99 });
+  const [newVersion, setNewVersion] = useState<{ title: string; content: string; summary: string; isFree: boolean; price: number | ''; mediaType: 'text' | 'audio' | 'video'; mediaUrl: string; choices: { label: string; targetVersionId: string }[] }>({ title: '', content: '', summary: '', isFree: true, price: 1.99, mediaType: 'text', mediaUrl: '', choices: [] });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    if (!authLoading && !user) router.push('/auth/login');
+    if (!authLoading && !user) {
+      router.push(createLoginUrl(`${window.location.pathname}${window.location.search}`));
+    }
   }, [user, authLoading, router]);
 
   useEffect(() => {
@@ -119,7 +125,7 @@ function EditStoryContent({ slug }: { slug: string }) {
       setStory((s) => s ? { ...s, versions: [...s.versions, data.version] } : s);
       setActiveVersion(data.version);
       setShowNewVersion(false);
-      setNewVersion({ title: '', content: '', summary: '', isFree: true, price: 1.99 });
+      setNewVersion({ title: '', content: '', summary: '', isFree: true, price: 1.99, mediaType: 'text', mediaUrl: '', choices: [] });
       setSuccess('Version added!');
       setTimeout(() => setSuccess(''), 2000);
     } else {
@@ -301,6 +307,52 @@ function EditStoryContent({ slug }: { slug: string }) {
                     else setActiveVersion((v) => v ? { ...v, title: val } : v);
                   }}
                 />
+
+                <div className="grid gap-3 sm:grid-cols-[9rem_1fr]">
+                  <select
+                    className="input-base"
+                    value={showNewVersion ? newVersion.mediaType : activeVersion?.mediaType ?? 'text'}
+                    onChange={(e) => {
+                      const mediaType = e.target.value as 'text' | 'audio' | 'video';
+                      if (showNewVersion) setNewVersion((f) => ({ ...f, mediaType }));
+                      else setActiveVersion((v) => v ? { ...v, mediaType } : v);
+                    }}
+                  >
+                    <option value="text">Text node</option>
+                    <option value="audio">Audio node</option>
+                    <option value="video">Video node</option>
+                  </select>
+                  <input
+                    type="url"
+                    className="input-base"
+                    placeholder="Media URL (optional)"
+                    value={showNewVersion ? newVersion.mediaUrl : activeVersion?.mediaUrl ?? ''}
+                    onChange={(e) => {
+                      const mediaUrl = e.target.value;
+                      if (showNewVersion) setNewVersion((f) => ({ ...f, mediaUrl }));
+                      else setActiveVersion((v) => v ? { ...v, mediaUrl } : v);
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-[10px] font-mono tracking-widest text-[var(--text-dim)]">BRANCHING CHOICES (JSON)</label>
+                  <textarea
+                    className="input-base min-h-20 resize-y font-mono text-xs"
+                    placeholder={'[{"label":"Enter the forest","targetVersionId":"NODE_ID"}]'}
+                    value={JSON.stringify(showNewVersion ? newVersion.choices : activeVersion?.choices ?? [])}
+                    onChange={(e) => {
+                      try {
+                        const choices = JSON.parse(e.target.value);
+                        if (!Array.isArray(choices)) return;
+                        if (showNewVersion) setNewVersion((f) => ({ ...f, choices }));
+                        else setActiveVersion((v) => v ? { ...v, choices } : v);
+                      } catch {
+                        // Keep the last valid value while the author is typing.
+                      }
+                    }}
+                  />
+                  <p className="mt-1 text-xs text-[var(--muted)]">Connect this node to another node using its ID. Leave empty for a linear chapter.</p>
+                </div>
 
                 <input
                   type="text"

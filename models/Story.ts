@@ -10,6 +10,9 @@ export interface IVersion {
   purchasedBy: string[];
   viewCount: number;
   likeCount: number;
+  mediaType: 'text' | 'audio' | 'video';
+  mediaUrl?: string;
+  choices: { label: string; targetVersionId: string }[];
   createdAt: Date;
 }
 
@@ -54,6 +57,12 @@ const VersionSchema = new Schema<IVersion>(
     purchasedBy: [{ type: String }],
     viewCount: { type: Number, default: 0 },
     likeCount: { type: Number, default: 0 },
+    mediaType: { type: String, enum: ['text', 'audio', 'video'], default: 'text' },
+    mediaUrl: { type: String, default: '' },
+    choices: [{
+      label: { type: String, trim: true },
+      targetVersionId: { type: String },
+    }],
   },
   { timestamps: true }
 );
