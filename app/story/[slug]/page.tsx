@@ -181,50 +181,50 @@ function StoryContent({ slug }: { slug: string }) {
         <div className="mb-5 border-y border-[var(--border)] py-4">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
             <div>
-          <div className="mb-2 flex flex-wrap gap-2">
-            {story.genre.map((g) => (
-              <span key={g} className="text-[10px] font-mono tracking-widest border border-[var(--border-soft)] text-[var(--text-dim)] px-2 py-1">
-                {g.toUpperCase()}
-              </span>
-            ))}
-          </div>
-          <h1 className="mb-2 max-w-4xl font-display text-4xl font-light leading-tight text-[var(--text-bright)] sm:text-5xl">
-            {story.title}
-          </h1>
-          <p className="mb-2 max-w-2xl text-base text-[var(--text-dim)]">{story.description}</p>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-[var(--muted)] font-mono">
-            <span className={isOwner ? 'text-[var(--aurora)]' : ''}>
-              {isOwner ? 'YOUR BRANCH' : `BRANCH BY @${story.authorUsername}`}
-            </span>
-            <span className="flex items-center gap-1"><Eye size={11} /> {story.totalViews.toLocaleString()}</span>
-            <span className="flex items-center gap-1"><Clock size={11} /> {story.readingTime}m read</span>
-            <span className="flex items-center gap-1"><GitBranch size={11} /> {story.versions.length} versions</span>
-          </div>
+              <div className="mb-2 flex flex-wrap gap-2">
+                {story.genre.map((g) => (
+                  <span key={g} className="text-[10px] font-mono tracking-widest border border-[var(--border-soft)] text-[var(--text-dim)] px-2 py-1">
+                    {g.toUpperCase()}
+                  </span>
+                ))}
+              </div>
+              <h1 className="mb-2 max-w-4xl font-display text-4xl font-light leading-tight text-[var(--text-bright)] sm:text-5xl">
+                {story.title}
+              </h1>
+              <p className="mb-2 max-w-2xl text-base text-[var(--text-dim)]">{story.description}</p>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-[var(--muted)] font-mono">
+                <span className={isOwner ? 'text-[var(--aurora)]' : ''}>
+                  {isOwner ? 'YOUR BRANCH' : `BRANCH BY @${story.authorUsername}`}
+                </span>
+                <span className="flex items-center gap-1"><Eye size={11} /> {story.totalViews.toLocaleString()}</span>
+                <span className="flex items-center gap-1"><Clock size={11} /> {story.readingTime}m read</span>
+                <span className="flex items-center gap-1"><GitBranch size={11} /> {story.versions.length} versions</span>
+              </div>
             </div>
-          <div className="flex flex-wrap gap-2 lg:justify-end">
-            {story.versions.some((version) => !version.isFree && !version.hasPurchased) && (
-              <button onClick={handlePurchaseComplete} disabled={buyingComplete} className="btn-gold whitespace-nowrap text-sm flex items-center gap-1">
-                {buyingComplete ? <Loader2 size={14} className="animate-spin" /> : <ShoppingCart size={14} />}
-                {buyingComplete ? 'Unlocking...' : 'Unlock story'}
-              </button>
-            )}
-            {!isOwner && (
-              <button onClick={handleContinue} disabled={continuing || selectedVersion?.isLocked} className="btn-primary whitespace-nowrap text-sm">
-                {continuing ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
-                {continuing ? 'Preparing...' : 'Continue story'}
-              </button>
-            )}
-            {isOwner ? (
-              <Link href={`/write/edit/${story.slug}`} className="btn-primary whitespace-nowrap text-sm">
-                <Edit3 size={14} /> Edit branch
-              </Link>
-            ) : (
-              <button onClick={handleClone} disabled={cloning} className="btn-ghost whitespace-nowrap text-sm">
-                {cloning ? <Loader2 size={14} className="animate-spin" /> : <Copy size={14} />}
-                {cloning ? 'Cloning...' : 'Clone this branch'}
-              </button>
-            )}
-          </div>
+            <div className="flex flex-wrap gap-2 lg:justify-end">
+              {story.versions.some((version) => !version.isFree && !version.hasPurchased) && (
+                <button onClick={handlePurchaseComplete} disabled={buyingComplete} className="btn-gold whitespace-nowrap text-sm flex items-center gap-1">
+                  {buyingComplete ? <Loader2 size={14} className="animate-spin" /> : <ShoppingCart size={14} />}
+                  {buyingComplete ? 'Unlocking...' : 'Unlock story'}
+                </button>
+              )}
+              {!isOwner && (
+                <button onClick={handleContinue} disabled={continuing || selectedVersion?.isLocked} className="btn-primary whitespace-nowrap text-sm">
+                  {continuing ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
+                  {continuing ? 'Preparing...' : 'Continue story'}
+                </button>
+              )}
+              {isOwner ? (
+                <Link href={`/write/edit/${story.slug}`} className="btn-primary whitespace-nowrap text-sm">
+                  <Edit3 size={14} /> Edit branch
+                </Link>
+              ) : (
+                <button onClick={handleClone} disabled={cloning} className="btn-ghost whitespace-nowrap text-sm">
+                  {cloning ? <Loader2 size={14} className="animate-spin" /> : <Copy size={14} />}
+                  {cloning ? 'Cloning...' : 'Clone this branch'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -234,11 +234,10 @@ function StoryContent({ slug }: { slug: string }) {
           </div>
         )}
         {notice && (
-          <div className={`mb-4 border px-4 py-3 text-sm ${
-            notice.type === 'success'
-              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-              : 'border-[var(--pulse)]/30 bg-[var(--pulse)]/10 text-[var(--pulse)]'
-          }`} role="status">
+          <div className={`mb-4 border px-4 py-3 text-sm ${notice.type === 'success'
+            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+            : 'border-[var(--pulse)]/30 bg-[var(--pulse)]/10 text-[var(--pulse)]'
+            }`} role="status">
             {notice.text}
           </div>
         )}
@@ -262,11 +261,10 @@ function StoryContent({ slug }: { slug: string }) {
                   }}
                   role="button"
                   tabIndex={v.isLocked ? -1 : 0}
-                  className={`w-full text-left p-3 border transition-all ${
-                    selectedVersion?._id === v._id
-                      ? 'border-[var(--aurora)] bg-[var(--surface)]'
-                      : 'border-[var(--border)] bg-[var(--deep)] hover:border-[var(--border-soft)]'
-                  } ${v.isLocked ? 'opacity-70 cursor-default' : 'cursor-pointer'}`}
+                  className={`w-full text-left p-3 border transition-all ${selectedVersion?._id === v._id
+                    ? 'border-[var(--aurora)] bg-[var(--surface)]'
+                    : 'border-[var(--border)] bg-[var(--deep)] hover:border-[var(--border-soft)]'
+                    } ${v.isLocked ? 'opacity-70 cursor-default' : 'cursor-pointer'}`}
                 >
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <span className="text-xs font-mono text-[var(--muted)]">V{i + 1}</span>
@@ -320,13 +318,12 @@ function StoryContent({ slug }: { slug: string }) {
                   <button
                     onClick={() => !version.isLocked && setSelectedVersion(version)}
                     disabled={version.isLocked}
-                    className={`flex h-9 min-w-9 items-center justify-center border px-2 text-[10px] font-mono transition-colors ${
-                      selectedVersion?._id === version._id
-                        ? 'border-[var(--aurora)] bg-[var(--aurora)]/15 text-[var(--aurora)]'
-                        : version.isLocked
-                          ? 'border-[var(--border)] text-[var(--muted)]'
-                          : 'border-[var(--border-soft)] text-[var(--text-dim)] hover:border-[var(--aurora)]'
-                    }`}
+                    className={`flex h-9 min-w-9 items-center justify-center border px-2 text-[10px] font-mono transition-colors ${selectedVersion?._id === version._id
+                      ? 'border-[var(--aurora)] bg-[var(--aurora)]/15 text-[var(--aurora)]'
+                      : version.isLocked
+                        ? 'border-[var(--border)] text-[var(--muted)]'
+                        : 'border-[var(--border-soft)] text-[var(--text-dim)] hover:border-[var(--aurora)]'
+                      }`}
                     title={version.title}
                   >
                     V{index + 1}
