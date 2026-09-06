@@ -26,6 +26,7 @@ function WriteContent() {
   const [aiPrompt, setAiPrompt] = useState('');
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [preview, setPreview] = useState(false);
 
   useEffect(() => {
@@ -46,6 +47,7 @@ function WriteContent() {
     }
     setSaving(true);
     setError('');
+    try {
     const res = await fetch('/api/stories', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -59,8 +61,14 @@ function WriteContent() {
     if (res.ok) {
       setCreatedStory(data.story);
       setStep('version');
+      setNotice('Story created. Now add its first version.');
     } else {
-      setError(data.error);
+      setError(data.error || 'The story could not be created.');
+    }
+    } catch {
+      setError('Connection failed. Your story was not saved.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -104,6 +112,7 @@ function WriteContent() {
   const generateWithAI = async (type: 'story' | 'alternate-ending' | 'description') => {
     if (!aiPrompt) return;
     setAiLoading(true);
+    try {
     const res = await fetch('/api/ai/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -116,7 +125,6 @@ function WriteContent() {
       }),
     });
     const data = await res.json();
-    setAiLoading(false);
     if (data.content) {
       if (type === 'description') {
         setStoryForm((f) => ({ ...f, description: data.content }));
@@ -125,21 +133,42 @@ function WriteContent() {
       }
       setShowAiPanel(false);
       setAiPrompt('');
+      setNotice(type === 'description' ? 'Story pitch generated.' : 'Draft text generated and added to the editor.');
+    }
+    } catch {
+      setError('The writing assistant could not connect. Try again.');
+    } finally {
+      setAiLoading(false);
     }
   };
 
   const generateTitles = async () => {
-    if (!aiPrompt) return;
+    const prompt = aiPrompt.trim() || storyForm.description.trim() || storyForm.tags.trim() || storyForm.genre.join(', ');
+    if (!prompt) {
+      setError('Add a description, genre, or a few tags so I can suggest a title.');
+      return;
+    }
     setAiLoading(true);
+    setError('');
+    try {
     const res = await fetch('/api/ai/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'title', prompt: aiPrompt, genre: storyForm.genre[0] }),
+      body: JSON.stringify({ type: 'title', prompt, genre: storyForm.genre[0] }),
     });
     const data = await res.json();
     setAiLoading(false);
     if (data.titles?.length > 0) {
       setStoryForm((f) => ({ ...f, title: data.titles[0] }));
+      setError('');
+      setNotice('Title suggested. You can edit it before continuing.');
+    } else {
+      setError(data.error || 'I could not suggest a title right now. Try adding a short description.');
+    }
+    } catch {
+      setError('The title assistant could not connect. Check your connection and try again.');
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -182,6 +211,11 @@ function WriteContent() {
             {error}
           </div>
         )}
+        {notice && (
+          <div className="mb-6 border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400" role="status">
+            {notice}
+          </div>
+        )}
 
         {/* Story step */}
         {step === 'story' && (
@@ -192,9 +226,11 @@ function WriteContent() {
                   <label className="text-xs font-mono tracking-widest text-[var(--text-dim)] uppercase">Title</label>
                   <button
                     onClick={generateTitles}
-                    className="flex items-center gap-1 text-xs text-[var(--aurora)] hover:text-[var(--text)] transition-colors"
+                    disabled={aiLoading}
+                    className="flex items-center gap-1 text-xs text-[var(--aurora)] hover:text-[var(--text)] transition-colors disabled:cursor-wait disabled:opacity-60"
                   >
-                    <Sparkles size={11} /> Suggest a title
+                    {aiLoading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+                    {aiLoading ? 'Thinking...' : 'Suggest a title'}
                   </button>
                 </div>
                 <input
@@ -208,12 +244,12 @@ function WriteContent() {
 
               <div className="space-y-1.5 md:col-span-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-mono tracking-widest text-[var(--text-dim)] uppercase">Description</label>
+                  <label className="text-xs font-mono tracking-widest text-[var(--text-dim)] uppercase">Story pitch</label>
                   <button
-                    onClick={() => setShowAiPanel(true)}
+                    onClick={() => { setAiPrompt(storyForm.description); setShowAiPanel(true); }}
                     className="flex items-center gap-1 text-xs text-[var(--aurora)] hover:text-[var(--text)] transition-colors"
                   >
-                    <Sparkles size={11} /> Help me write
+                    <Sparkles size={11} /> Help me write the pitch
                   </button>
                 </div>
                 <p className="mb-4 text-sm leading-6 text-[var(--text-dim)]">
@@ -224,7 +260,7 @@ function WriteContent() {
                     <button
                       key={suggestion}
                       type="button"
-                      onClick={() => setAiPrompt(suggestion)}
+                      onClick={() => { setAiPrompt(suggestion); setShowAiPanel(true); }}
                       className="rounded-full border border-[var(--border-soft)] px-3 py-1.5 text-xs text-[var(--text-dim)] transition-colors hover:border-[var(--aurora)] hover:text-[var(--text)]"
                     >
                       {suggestion}
@@ -234,7 +270,7 @@ function WriteContent() {
                 <textarea
                   className="input-base resize-none"
                   rows={4}
-                  placeholder="A captivating hook that makes readers desperate to explore every version..."
+                  placeholder="In one or two sentences, what is this story about?"
                   value={storyForm.description}
                   onChange={(e) => setStoryForm({ ...storyForm, description: e.target.value })}
                 />

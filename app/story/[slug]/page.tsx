@@ -203,9 +203,9 @@ function StoryContent({ slug }: { slug: string }) {
             </div>
           <div className="flex flex-wrap gap-2 lg:justify-end">
             {story.versions.some((version) => !version.isFree && !version.hasPurchased) && (
-              <button onClick={handlePurchaseComplete} disabled={buyingComplete} className="btn-gold whitespace-nowrap text-sm">
+              <button onClick={handlePurchaseComplete} disabled={buyingComplete} className="btn-gold whitespace-nowrap text-sm flex items-center gap-1">
                 {buyingComplete ? <Loader2 size={14} className="animate-spin" /> : <ShoppingCart size={14} />}
-                {buyingComplete ? 'Unlocking...' : 'Unlock complete story'}
+                {buyingComplete ? 'Unlocking...' : 'Unlock story'}
               </button>
             )}
             {!isOwner && (
