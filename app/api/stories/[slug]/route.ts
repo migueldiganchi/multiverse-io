@@ -12,8 +12,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
     const { slug } = await params;
     const user = await getServerUser();
 
-    const story = await Story.findOne({ slug, isPublished: true }).lean() as Record<string, unknown> | null;
+    const story = await Story.findOne({ slug }).lean() as Record<string, unknown> | null;
     if (!story) {
+      return NextResponse.json({ error: 'Story not found' }, { status: 404 });
+    }
+    const isOwner = user?.username === story.authorUsername;
+    if (!story.isPublished && !isOwner) {
       return NextResponse.json({ error: 'Story not found' }, { status: 404 });
     }
 
@@ -41,7 +45,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
     });
 
     // Increment view count
-    await Story.findByIdAndUpdate((story as any)._id, { $inc: { totalViews: 1 } });
+    if (story.isPublished) {
+      await Story.findByIdAndUpdate((story as any)._id, { $inc: { totalViews: 1 } });
+    }
 
     return NextResponse.json({ story: { ...story, versions } });
   } catch (error) {

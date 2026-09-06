@@ -56,7 +56,11 @@ function EditStoryContent({ slug }: { slug: string }) {
 
   useEffect(() => {
     fetch(`/api/stories/${slug}`)
-      .then((r) => r.json())
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Story not found');
+        return data;
+      })
       .then((d) => {
         if (d.story) {
           setStory(d.story);
@@ -64,7 +68,10 @@ function EditStoryContent({ slug }: { slug: string }) {
         }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((loadError: Error) => {
+        setError(loadError.message);
+        setLoading(false);
+      });
   }, [slug]);
 
   const saveVersionEdit = async () => {
