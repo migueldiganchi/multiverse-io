@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { DM_Sans, Cormorant_Garamond, Space_Mono } from 'next/font/google';
 import './globals.css';
 import SiteFooter from '@/components/SiteFooter';
@@ -10,11 +10,24 @@ const mono = Space_Mono({ subsets: ['latin'], variable: '--font-mono', weight: [
 export const metadata: Metadata = {
   title: 'Multiverse.io — Infinite Stories, Infinite Worlds',
   description: 'Create stories with alternate endings. Buy and sell narrative versions. Explore infinite fictional universes.',
+  applicationName: 'Multiverse.io',
+  manifest: '/site.webmanifest',
   icons: {
-    icon: [{ url: '/icon.png?v=2', type: 'image/png', sizes: '370x360' }],
-    shortcut: '/icon.png?v=2',
-    apple: '/icon.png?v=2',
+    icon: [
+      { url: '/favicon.ico', type: 'image/x-icon' },
+      { url: '/favicon-16x16.png', type: 'image/png', sizes: '16x16' },
+      { url: '/favicon-32x32.png', type: 'image/png', sizes: '32x32' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: [{ url: '/apple-touch-icon.png', type: 'image/png', sizes: '180x180' }],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#030305',
+  colorScheme: 'dark',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
