@@ -17,7 +17,7 @@ interface Version {
   content: string;
   summary: string;
   isFree: boolean;
-  price: number;
+  price: number | '';
   viewCount: number;
   likeCount: number;
 }
@@ -46,7 +46,7 @@ function EditStoryContent({ slug }: { slug: string }) {
   const [aiPrompt, setAiPrompt] = useState('');
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
-  const [newVersion, setNewVersion] = useState({ title: '', content: '', summary: '', isFree: true, price: 1.99 });
+  const [newVersion, setNewVersion] = useState<{ title: string; content: string; summary: string; isFree: boolean; price: number | '' }>({ title: '', content: '', summary: '', isFree: true, price: 1.99 });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -76,7 +76,7 @@ function EditStoryContent({ slug }: { slug: string }) {
 
   const saveVersionEdit = async () => {
     if (!activeVersion || !story) return;
-    if (!activeVersion.isFree && (!Number.isFinite(activeVersion.price) || activeVersion.price < 0.99)) {
+    if (!activeVersion.isFree && (activeVersion.price === '' || activeVersion.price < 0.99)) {
       setError('Paid versions require a price of at least $0.99');
       return;
     }
@@ -84,7 +84,7 @@ function EditStoryContent({ slug }: { slug: string }) {
     const res = await fetch(`/api/stories/${story.slug}/versions`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ versionId: activeVersion._id, ...activeVersion }),
+      body: JSON.stringify({ versionId: activeVersion._id, ...activeVersion, price: activeVersion.price === '' ? undefined : activeVersion.price }),
     });
     setSaving(false);
     if (res.ok) {
@@ -100,7 +100,7 @@ function EditStoryContent({ slug }: { slug: string }) {
       setError('Title and content required');
       return;
     }
-    if (!newVersion.isFree && (!Number.isFinite(newVersion.price) || newVersion.price < 0.99)) {
+    if (!newVersion.isFree && (newVersion.price === '' || newVersion.price < 0.99)) {
       setError('Paid versions require a price of at least $0.99');
       return;
     }
@@ -108,7 +108,7 @@ function EditStoryContent({ slug }: { slug: string }) {
     const res = await fetch(`/api/stories/${story.slug}/versions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newVersion),
+      body: JSON.stringify({ ...newVersion, price: newVersion.price === '' ? undefined : newVersion.price }),
     });
     const data = await res.json();
     setSaving(false);
@@ -385,11 +385,9 @@ function EditStoryContent({ slug }: { slug: string }) {
                         min="0.99"
                         max="99.99"
                         step="0.50"
-                        value={showNewVersion
-                          ? (Number.isFinite(newVersion.price) ? newVersion.price : '')
-                          : (activeVersion && Number.isFinite(activeVersion.price) ? activeVersion.price : '')}
+                        value={showNewVersion ? newVersion.price : activeVersion?.price ?? ''}
                         onChange={(e) => {
-                          const val = e.target.value === '' ? 0 : Number(e.target.value);
+                          const val = e.target.value === '' ? '' : Number(e.target.value);
                           if (showNewVersion) setNewVersion((f) => ({ ...f, price: val }));
                           else setActiveVersion((v) => v ? { ...v, price: val } : v);
                         }}
