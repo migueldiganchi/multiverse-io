@@ -15,10 +15,16 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search');
     const author = searchParams.get('author');
     const featured = searchParams.get('featured');
+    const user = await getServerUser();
 
     const query: Record<string, unknown> = { isPublished: true };
     if (genre) query.genre = genre;
-    if (author) query.authorUsername = author;
+    if (author) {
+      query.authorUsername = author;
+      if (user?.username === author) {
+        delete query.isPublished;
+      }
+    }
     if (featured) query.isFeatured = true;
     if (search) query.$text = { $search: search };
 

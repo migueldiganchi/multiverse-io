@@ -90,6 +90,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
       title, slug: `${slugify(title, { lower: true, strict: true })}-${uuidv4().slice(0, 8)}`,
       description: source.description, genre: source.genre, tags: source.tags, language: source.language,
       author: user.userId, authorUsername: user.username, versions,
+      originStory: source._id, originSlug: source.slug,
+      originType: isContinuation ? 'continuation' : 'clone',
       totalVersions: versions.length, freeVersions: versions.length, paidVersions: 0,
       readingTime: source.readingTime, isPublished: false,
     });

@@ -23,6 +23,9 @@ export interface IStory extends Document {
   tags: string[];
   author: Types.ObjectId;
   authorUsername: string;
+  originStory?: Types.ObjectId;
+  originSlug?: string;
+  originType?: 'original' | 'clone' | 'continuation';
   versions: IVersion[];
   isPublished: boolean;
   isFeatured: boolean;
@@ -65,6 +68,9 @@ const StorySchema = new Schema<IStory>(
     tags: [{ type: String }],
     author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     authorUsername: { type: String, required: true },
+    originStory: { type: Schema.Types.ObjectId, ref: 'Story' },
+    originSlug: { type: String, default: '' },
+    originType: { type: String, enum: ['original', 'clone', 'continuation'], default: 'original' },
     versions: [VersionSchema],
     isPublished: { type: Boolean, default: false },
     isFeatured: { type: Boolean, default: false },

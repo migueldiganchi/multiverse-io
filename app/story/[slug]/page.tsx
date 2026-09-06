@@ -44,6 +44,7 @@ function StoryContent({ slug }: { slug: string }) {
   const [error, setError] = useState('');
   const [cloning, setCloning] = useState(false);
   const [continuing, setContinuing] = useState(false);
+  const [buyingComplete, setBuyingComplete] = useState(false);
   const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
@@ -69,7 +70,7 @@ function StoryContent({ slug }: { slug: string }) {
     setCloning(false);
     if (response.ok) {
       setNotice({ type: 'success', text: 'Branch cloned. Opening your editable copy...' });
-      router.push(`/write/edit/${data.story.slug}`);
+      router.push(`/write/edit/${data.story.slug}?created=clone`);
     } else {
       setNotice({ type: 'error', text: data.error || 'Unable to clone this branch' });
     }
@@ -92,7 +93,7 @@ function StoryContent({ slug }: { slug: string }) {
     setContinuing(false);
     if (response.ok) {
       setNotice({ type: 'success', text: 'Continuation created. Opening the editor...' });
-      router.push(`/write/edit/${data.story.slug}`);
+      router.push(`/write/edit/${data.story.slug}?created=continuation`);
     } else {
       setNotice({ type: 'error', text: data.error || 'Unable to create a continuation' });
     }
@@ -121,6 +122,29 @@ function StoryContent({ slug }: { slug: string }) {
       setNotice({ type: 'success', text: 'Purchase completed. This version is now unlocked.' });
     } else {
       setNotice({ type: 'error', text: data.error || 'Purchase failed' });
+    }
+  };
+
+  const handlePurchaseComplete = async () => {
+    if (!user) { router.push('/auth/login'); return; }
+    setBuyingComplete(true);
+    const response = await fetch('/api/purchases', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ storySlug: slug, purchaseAll: true }),
+    });
+    const data = await response.json();
+    setBuyingComplete(false);
+    if (response.ok) {
+      setNotice({ type: 'success', text: 'Complete story unlocked. All paid paths are now available.' });
+      setStory((current) => current ? {
+        ...current,
+        versions: current.versions.map((version) => version.isFree
+          ? version
+          : { ...version, hasPurchased: true, isLocked: false }),
+      } : current);
+    } else {
+      setNotice({ type: 'error', text: data.error || 'Unable to unlock the complete story' });
     }
   };
 
@@ -178,6 +202,12 @@ function StoryContent({ slug }: { slug: string }) {
           </div>
             </div>
           <div className="flex flex-wrap gap-2 lg:justify-end">
+            {story.versions.some((version) => !version.isFree && !version.hasPurchased) && (
+              <button onClick={handlePurchaseComplete} disabled={buyingComplete} className="btn-gold whitespace-nowrap text-sm">
+                {buyingComplete ? <Loader2 size={14} className="animate-spin" /> : <ShoppingCart size={14} />}
+                {buyingComplete ? 'Unlocking...' : 'Unlock complete story'}
+              </button>
+            )}
             {!isOwner && (
               <button onClick={handleContinue} disabled={continuing || selectedVersion?.isLocked} className="btn-primary whitespace-nowrap text-sm">
                 {continuing ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}

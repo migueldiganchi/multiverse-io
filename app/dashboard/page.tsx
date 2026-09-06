@@ -22,6 +22,7 @@ interface Story {
   totalViews: number;
   totalEarnings: number;
   totalPurchases: number;
+  originType?: 'original' | 'clone' | 'continuation';
   createdAt: string;
 }
 
@@ -145,6 +146,11 @@ function DashboardContent() {
                         }`}>
                           {story.isPublished ? 'LIVE' : 'DRAFT'}
                         </span>
+                        {story.originType && story.originType !== 'original' && (
+                          <span className="text-[10px] font-mono px-2 py-0.5 border border-[var(--aurora-dim)] text-[var(--aurora)]">
+                            {story.originType === 'clone' ? 'CLONED BRANCH' : 'CONTINUATION'}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-5 text-xs text-[var(--text-dim)] font-mono">
                         <span className="flex items-center gap-1"><Eye size={11} /> {story.totalViews}</span>

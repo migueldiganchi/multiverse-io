@@ -72,6 +72,9 @@ function EditStoryContent({ slug }: { slug: string }) {
         setError(loadError.message);
         setLoading(false);
       });
+    const created = new URLSearchParams(window.location.search).get('created');
+    if (created === 'clone') setSuccess('Branch cloned successfully. You can now edit your copy.');
+    if (created === 'continuation') setSuccess('Continuation created successfully. Add the next version here.');
   }, [slug]);
 
   const saveVersionEdit = async () => {
@@ -165,6 +168,11 @@ function EditStoryContent({ slug }: { slug: string }) {
       setShowAiPanel(false);
       setAiPrompt('');
     }
+  };
+
+  const chooseSuggestion = (suggestion: string) => {
+    setAiPrompt(suggestion);
+    setShowAiPanel(true);
   };
 
   if (loading || authLoading) return (
@@ -327,16 +335,17 @@ function EditStoryContent({ slug }: { slug: string }) {
                         else setActiveVersion((v) => v ? { ...v, content: val } : v);
                       }}
                     />
-                    <p className="mb-4 text-sm leading-6 text-[var(--text-dim)]">
-                      Describe the direction in everyday language, or choose a starting idea:
+                    <p className="mb-2 text-sm leading-6 text-[var(--text-dim)]">
+                      Choose an idea to open the AI assistant with a ready-to-use prompt:
                     </p>
                     <div className="mb-4 flex flex-wrap gap-2">
                       {['Raise the stakes', 'Reveal a hidden truth', 'Take the story somewhere unexpected'].map((suggestion) => (
                         <button
                           key={suggestion}
                           type="button"
-                          onClick={() => setAiPrompt(suggestion)}
+                          onClick={() => chooseSuggestion(suggestion)}
                           className="rounded-full border border-[var(--border-soft)] px-3 py-1.5 text-xs text-[var(--text-dim)] transition-colors hover:border-[var(--aurora)] hover:text-[var(--text)]"
+                          aria-label={`Use suggestion: ${suggestion}`}
                         >
                           {suggestion}
                         </button>
