@@ -8,6 +8,7 @@ import PasswordInput from '@/components/PasswordInput';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ArrowRight, AlertCircle } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
+import { getSafeReturnTo } from '@/lib/auth-redirect';
 
 function LoginForm() {
   const { login } = useAuth();
@@ -15,6 +16,9 @@ function LoginForm() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const returnTo = typeof window !== 'undefined'
+    ? getSafeReturnTo(new URLSearchParams(window.location.search).get('returnTo'))
+    : '/explore';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +29,7 @@ function LoginForm() {
     if (result.error) {
       setError(result.error);
     } else {
-      router.push('/explore');
+      router.push(returnTo);
     }
   };
 

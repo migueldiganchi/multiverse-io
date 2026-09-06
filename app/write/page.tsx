@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { createLoginUrl } from '@/lib/auth-redirect';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import { Sparkles, Plus, Loader2, Lock, Unlock, Save, Eye, EyeOff, ArrowRight, X } from 'lucide-react';
@@ -30,7 +31,9 @@ function WriteContent() {
   const [preview, setPreview] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !user) router.push('/auth/login');
+    if (!authLoading && !user) {
+      router.push(createLoginUrl(`${window.location.pathname}${window.location.search}`));
+    }
   }, [user, authLoading, router]);
 
   const toggleGenre = (g: string) => {

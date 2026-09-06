@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
+import { createLoginUrl } from '@/lib/auth-redirect';
 import {
   BookOpen, GitBranch, Eye, DollarSign, PenTool,
   Loader2, TrendingUp, Lock, Unlock, Plus, ExternalLink
@@ -34,7 +35,9 @@ function DashboardContent() {
   const [tab, setTab] = useState<'stories' | 'earnings'>('stories');
 
   useEffect(() => {
-    if (!authLoading && !user) router.push('/auth/login');
+    if (!authLoading && !user) {
+      router.push(createLoginUrl(`${window.location.pathname}${window.location.search}`));
+    }
   }, [user, authLoading, router]);
 
   useEffect(() => {

@@ -11,7 +11,13 @@ export async function POST(req: NextRequest) {
     if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     await connectDB();
-    const { storySlug, versionId, purchaseAll } = await req.json();
+    const body = await req.json();
+    const storySlug = typeof body.storySlug === 'string' ? body.storySlug : '';
+    const versionId = typeof body.versionId === 'string' ? body.versionId : '';
+    const purchaseAll = body.purchaseAll === true;
+    if (!storySlug || (!purchaseAll && !versionId)) {
+      return NextResponse.json({ error: 'A story and version are required' }, { status: 400 });
+    }
 
     const story = await Story.findOne({ slug: storySlug });
     if (!story) return NextResponse.json({ error: 'Story not found' }, { status: 404 });
@@ -41,22 +47,33 @@ export async function POST(req: NextRequest) {
     const purchases = [];
     let totalEarnings = 0;
     for (const version of pendingVersions) {
-      const amount = Math.round(version.price * 100);
+      const price = Number(version.price);
+      if (!Number.isFinite(price) || price <= 0) {
+        return NextResponse.json({ error: 'This version has an invalid price' }, { status: 400 });
+      }
+      const amount = Math.round(price * 100);
+      if (amount < 1) {
+        return NextResponse.json({ error: 'This version price is below the minimum charge' }, { status: 400 });
+      }
       const platformFee = Math.round(amount * 0.2);
       const sellerEarnings = amount - platformFee;
       purchases.push({
         buyer: authUser.userId, buyerUsername: authUser.username, seller: story.author,
         sellerUsername: story.authorUsername, story: story._id, storyTitle: story.title,
         storySlug: story.slug, versionId: version._id.toString(), versionTitle: version.title,
-        amount, platformFee, sellerEarnings, stripePaymentIntentId: `sim_${Date.now()}_${version._id}`,
+        amount, platformFee, sellerEarnings,
+        stripePaymentIntentId: `simulation_${Date.now()}_${version._id}`,
         status: 'completed',
       });
-      version.purchasedBy.push(authUser.userId);
+      if (!Array.isArray(version.purchasedBy)) version.purchasedBy = [];
+      if (!version.purchasedBy.includes(authUser.userId)) {
+        version.purchasedBy.push(authUser.userId);
+      }
       totalEarnings += sellerEarnings / 100;
     }
     const createdPurchases = await Purchase.insertMany(purchases);
-    story.totalPurchases += createdPurchases.length;
-    story.totalEarnings += totalEarnings;
+    story.totalPurchases = (story.totalPurchases || 0) + createdPurchases.length;
+    story.totalEarnings = (story.totalEarnings || 0) + totalEarnings;
     await story.save();
 
     await User.findByIdAndUpdate(story.author, {
