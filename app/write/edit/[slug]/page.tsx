@@ -50,6 +50,7 @@ function EditStoryContent({ slug }: { slug: string }) {
   const [showNewVersion, setShowNewVersion] = useState(false);
   const [preview, setPreview] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
+  const [aiResult, setAiResult] = useState('');
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [newVersion, setNewVersion] = useState<{ title: string; content: string; summary: string; isFree: boolean; price: number | ''; mediaType: 'text' | 'audio' | 'video'; mediaUrl: string; nodeType: 'chapter' | 'alternate'; parentVersionId: string; choices: { label: string; targetVersionId: string }[] }>({ title: '', content: '', summary: '', isFree: true, price: 1.99, mediaType: 'text', mediaUrl: '', nodeType: 'chapter', parentVersionId: '', choices: [] });
@@ -184,19 +185,32 @@ function EditStoryContent({ slug }: { slug: string }) {
     const data = await res.json();
     setAiLoading(false);
     if (data.content) {
-      if (showNewVersion) {
-        setNewVersion((f) => ({ ...f, content: f.content + (f.content ? '\n\n' : '') + data.content }));
-      } else if (activeVersion) {
-        setActiveVersion((v) => v ? { ...v, content: v.content + (v.content ? '\n\n' : '') + data.content } : v);
-      }
-      setShowAiPanel(false);
-      setAiPrompt('');
+      setAiResult(data.content);
+      setSuccess('La propuesta está lista. Revisala antes de usarla.');
     }
   };
 
   const sendPrompt = () => {
     if (!aiPrompt.trim() || aiLoading) return;
     void generateAI('story');
+  };
+
+  const useAiResult = () => {
+    if (!aiResult) return;
+    if (showNewVersion) {
+      setNewVersion((f) => ({ ...f, content: f.content + (f.content ? '\n\n' : '') + aiResult }));
+    } else if (activeVersion) {
+      setActiveVersion((v) => v ? { ...v, content: v.content + (v.content ? '\n\n' : '') + aiResult } : v);
+    }
+    setAiResult('');
+    setAiPrompt('');
+    setSuccess('Propuesta aplicada al capítulo.');
+  };
+
+  const discardAiResult = () => {
+    setAiResult('');
+    setAiPrompt('');
+    setSuccess('Propuesta descartada. El bot está listo para empezar de nuevo.');
   };
 
   if (loading || authLoading) return (
@@ -556,14 +570,25 @@ function EditStoryContent({ slug }: { slug: string }) {
               }
             }}
           />
-          <div className="mb-4 flex flex-wrap gap-2">
-            {['Tensión', 'Misterio', 'Giro'].map((suggestion) => (
+          {aiResult && (
+            <div className="ai-result-card" role="status">
+              <p className="ai-result-label">Resultado</p>
+              <div className="ai-result-content">{aiResult}</div>
+              <div className="ai-result-actions">
+                <button type="button" onClick={useAiResult} className="btn-primary">Usar</button>
+                <button type="button" onClick={sendPrompt} disabled={aiLoading || !aiPrompt.trim()} className="btn-ghost">Regenerar</button>
+                <button type="button" onClick={discardAiResult} className="btn-ghost">Descartar</button>
+              </div>
+            </div>
+          )}
+          {!aiResult && <div className="mb-4 flex flex-wrap gap-2">
+          {['Tensión', 'Misterio', 'Giro'].map((suggestion) => (
               <button key={suggestion} type="button" onClick={() => {
                 setAiPrompt(suggestion);
                 requestAnimationFrame(() => promptRef.current?.focus());
               }} className="chat-suggestion">{suggestion}</button>
             ))}
-          </div>
+          </div>}
           <div className="chat-actions">
             <button type="button" onClick={() => setShowAiPanel(false)} className="btn-ghost chat-close">Cerrar</button>
             <button type="button" onClick={sendPrompt} disabled={!aiPrompt.trim() || aiLoading} className="btn-primary chat-send">

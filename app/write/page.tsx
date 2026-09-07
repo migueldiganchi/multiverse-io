@@ -25,6 +25,7 @@ function WriteContent() {
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
+  const [aiResult, setAiResult] = useState('');
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -130,14 +131,8 @@ function WriteContent() {
     });
     const data = await res.json();
     if (data.content) {
-      if (type === 'description') {
-        setStoryForm((f) => ({ ...f, description: data.content }));
-      } else {
-        setVersionForm((f) => ({ ...f, content: f.content + (f.content ? '\n\n' : '') + data.content }));
-      }
-      setShowAiPanel(false);
-      setAiPrompt('');
-      setNotice(type === 'description' ? 'Story pitch generated.' : 'Draft text generated and added to the editor.');
+      setAiResult(data.content);
+      setNotice('La propuesta está lista. Revisala antes de usarla.');
     }
     } catch {
       setError('The writing assistant could not connect. Try again.');
@@ -180,6 +175,25 @@ function WriteContent() {
     const prompt = aiPrompt.trim();
     if (!prompt || aiLoading) return;
     void generateWithAI(step === 'story' ? 'story' : 'story');
+  };
+
+  const useAiResult = () => {
+    if (!aiResult) return;
+    if (step === 'story') {
+      setStoryForm((f) => ({ ...f, description: aiResult }));
+      setNotice('Propuesta aplicada a la historia.');
+    } else {
+      setVersionForm((f) => ({ ...f, content: f.content + (f.content ? '\n\n' : '') + aiResult }));
+      setNotice('Propuesta aplicada al capítulo.');
+    }
+    setAiResult('');
+    setAiPrompt('');
+  };
+
+  const discardAiResult = () => {
+    setAiResult('');
+    setAiPrompt('');
+    setNotice('Propuesta descartada. El bot está listo para empezar de nuevo.');
   };
 
   if (authLoading || !user) return null;
@@ -485,14 +499,26 @@ function WriteContent() {
                 }}
               />
 
-              <div className="mb-4 flex flex-wrap gap-2">
+              {aiResult && (
+                <div className="ai-result-card" role="status">
+                  <p className="ai-result-label">Resultado</p>
+                  <div className="ai-result-content">{aiResult}</div>
+                  <div className="ai-result-actions">
+                    <button type="button" onClick={useAiResult} className="btn-primary">Usar</button>
+                    <button type="button" onClick={sendPrompt} disabled={aiLoading || !aiPrompt.trim()} className="btn-ghost">Regenerar</button>
+                    <button type="button" onClick={discardAiResult} className="btn-ghost">Descartar</button>
+                  </div>
+                </div>
+              )}
+
+              {!aiResult && <div className="mb-4 flex flex-wrap gap-2">
                 {['Historia', 'Misterio', 'Giro'].map((suggestion) => (
                   <button key={suggestion} type="button" onClick={() => {
                     setAiPrompt(suggestion);
                     requestAnimationFrame(() => promptRef.current?.focus());
                   }} className="chat-suggestion">{suggestion}</button>
                 ))}
-              </div>
+              </div>}
               <div className="chat-actions">
                 <button type="button" onClick={() => setShowAiPanel(false)} className="btn-ghost chat-close">Cerrar</button>
                 <button type="button" onClick={sendPrompt} disabled={!aiPrompt.trim() || aiLoading} className="btn-primary chat-send">
