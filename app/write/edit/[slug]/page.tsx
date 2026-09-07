@@ -120,6 +120,7 @@ function EditStoryContent({ slug }: { slug: string }) {
     setSaving(false);
     if (res.ok) {
       setSuccess('Version saved');
+      setPreview(true);
       setTimeout(() => setSuccess(''), 2000);
     } else {
       setError('Failed to save');
@@ -149,6 +150,7 @@ function EditStoryContent({ slug }: { slug: string }) {
       setShowNewVersion(false);
       setNewVersion({ title: '', content: '', summary: '', isFree: true, price: 1.99, mediaType: 'text', mediaUrl: '', nodeType: 'chapter', parentVersionId: '', choices: [] });
       setSuccess('Version added!');
+      setPreview(true);
       setTimeout(() => setSuccess(''), 2000);
     } else {
       setError(data.error);
