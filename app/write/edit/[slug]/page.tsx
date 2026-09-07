@@ -178,11 +178,6 @@ function EditStoryContent({ slug }: { slug: string }) {
     }
   };
 
-  const chooseSuggestion = (suggestion: string) => {
-    setAiPrompt(suggestion);
-    setShowAiPanel(true);
-  };
-
   if (loading || authLoading) return (
     <div className="min-h-screen bg-[var(--void)] flex items-center justify-center">
       <Loader2 className="text-[var(--aurora)] animate-spin" size={28} />
@@ -286,7 +281,7 @@ function EditStoryContent({ slug }: { slug: string }) {
                       onClick={() => setShowAiPanel(true)}
                       className="flex items-center gap-1 text-xs text-[var(--aurora)] hover:text-[var(--text)] transition-colors"
                     >
-                      <Sparkles size={11} /> Ask the story bot
+                      <Sparkles size={11} /> Bot
                     </button>
                     <button
                       onClick={() => setPreview(!preview)}
@@ -389,22 +384,6 @@ function EditStoryContent({ slug }: { slug: string }) {
                         else setActiveVersion((v) => v ? { ...v, content: val } : v);
                       }}
                     />
-                    <p className="mb-2 text-sm leading-6 text-[var(--text-dim)]">
-                      Choose an idea to open the AI assistant with a ready-to-use prompt:
-                    </p>
-                    <div className="mb-4 flex flex-wrap gap-2">
-                      {['Raise the stakes', 'Reveal a hidden truth', 'Take the story somewhere unexpected'].map((suggestion) => (
-                        <button
-                          key={suggestion}
-                          type="button"
-                          onClick={() => chooseSuggestion(suggestion)}
-                          className="rounded-full border border-[var(--border-soft)] px-3 py-1.5 text-xs text-[var(--text-dim)] transition-colors hover:border-[var(--aurora)] hover:text-[var(--text)]"
-                          aria-label={`Use suggestion: ${suggestion}`}
-                        >
-                          {suggestion}
-                        </button>
-                      ))}
-                    </div>
                   </>
                 )}
 
@@ -506,7 +485,7 @@ function EditStoryContent({ slug }: { slug: string }) {
 
       {!showAiPanel && (
         <button className="story-assistant-launcher" onClick={() => setShowAiPanel(true)} aria-label="Open story bot">
-          <Sparkles size={17} /> <span>Ask story bot</span>
+          <Sparkles size={17} /> <span>Bot</span>
         </button>
       )}
 
@@ -525,32 +504,19 @@ function EditStoryContent({ slug }: { slug: string }) {
             <textarea
               className="input-base resize-none mb-4"
               rows={4}
-              placeholder="“Raise the stakes”, “add a mysterious chapter”, or “let the hero escape”..."
+              placeholder="What should I create?"
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
             />
-            <div className="mb-3 flex flex-wrap gap-2">
-              {['Raise the stakes', 'Reveal a hidden truth', 'Add a surprising chapter'].map((suggestion) => (
-                <button key={suggestion} onClick={() => setAiPrompt(suggestion)} className="rounded-full border border-[var(--border-soft)] px-3 py-1.5 text-[11px] text-[var(--text-dim)] hover:border-[var(--aurora)] hover:text-[var(--text)]">{suggestion}</button>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <button
-                onClick={() => generateAI('story')}
-                disabled={aiLoading || !aiPrompt}
-                className="btn-ghost text-sm justify-center"
-              >
-                {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                Write next chapter
-              </button>
-              <button
-                onClick={() => generateAI('alternate-ending')}
-                disabled={aiLoading || !aiPrompt}
-                className="btn-ghost text-sm justify-center"
-              >
-                {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <GitBranch size={14} />}
-                Suggest alternate path
-              </button>
+            <div className="grid grid-cols-1 gap-3">
+            <button
+              onClick={() => generateAI('story')}
+              disabled={aiLoading || !aiPrompt}
+              className="btn-ghost text-sm justify-center"
+            >
+              {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+              Create
+            </button>
             </div>
           </div>
       )}

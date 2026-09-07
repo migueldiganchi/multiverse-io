@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createLoginUrl } from '@/lib/auth-redirect';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
-import { Sparkles, Plus, Loader2, Lock, Unlock, Save, Eye, EyeOff, ArrowRight, X } from 'lucide-react';
+import { Sparkles, Loader2, Lock, Unlock, Save, Eye, EyeOff, ArrowRight, X } from 'lucide-react';
 
 const GENRES = ['Sci-Fi', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Thriller', 'Literary Fiction', 'Adventure', 'Dystopian'];
 
@@ -451,7 +451,7 @@ function WriteContent() {
 
         {!showAiPanel && (
           <button className="story-assistant-launcher" onClick={() => setShowAiPanel(true)} aria-label="Open story bot">
-            <Sparkles size={17} /> <span>Ask story bot</span>
+            <Sparkles size={17} /> <span>Bot</span>
           </button>
         )}
 
@@ -471,45 +471,20 @@ function WriteContent() {
               <textarea
                 className="input-base resize-none mb-4"
                 rows={4}
-                placeholder="“Create a story about...”, “suggest a title”, or “write the next chapter”..."
+                placeholder="What should I create?"
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
               />
 
-              <div className="mb-3 flex flex-wrap gap-2">
-                {['Suggest a title', 'Write a mysterious opening', 'Surprise me'].map((suggestion) => (
-                  <button key={suggestion} onClick={() => setAiPrompt(suggestion)} className="rounded-full border border-[var(--border-soft)] px-3 py-1.5 text-[11px] text-[var(--text-dim)] hover:border-[var(--aurora)] hover:text-[var(--text)]">{suggestion}</button>
-                ))}
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3">
                 <button
                   onClick={() => generateWithAI(step === 'story' ? 'story' : 'story')}
                   disabled={aiLoading || !aiPrompt}
                   className="btn-ghost text-sm justify-center"
                 >
                   {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                  Write into editor
+                  Create
                 </button>
-                {step === 'version' && (
-                  <button
-                    onClick={() => generateWithAI('alternate-ending')}
-                    disabled={aiLoading || !aiPrompt}
-                    className="btn-ghost text-sm justify-center"
-                  >
-                    {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-                    Create alternate path
-                  </button>
-                )}
-                {step === 'story' && (
-                  <button
-                    onClick={() => generateWithAI('description')}
-                    disabled={aiLoading || !aiPrompt}
-                    className="btn-ghost text-sm justify-center"
-                  >
-                    {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-                    Shape the pitch
-                  </button>
-                )}
               </div>
           </div>
         )}

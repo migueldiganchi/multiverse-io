@@ -210,8 +210,8 @@ function StoryContent({ slug }: { slug: string }) {
           <Link href="/explore" className="inline-flex items-center gap-2 text-xs font-mono text-[var(--text-dim)] transition-colors hover:text-[var(--text)]"><ArrowLeft size={14} /> <span className="hidden sm:inline">BACK TO LIBRARY</span><span className="sm:hidden">LIBRARY</span></Link>
           <div className="flex items-center gap-2">
             <ActionButton icon={<Share2 size={16} />} onClick={handleShare} label="Share story">Share</ActionButton>
-            <ActionButton icon={mapOpen ? <X size={16} /> : <Map size={16} />} onClick={() => setMapOpen(!mapOpen)} primary={mapOpen} label="Open story map"><span className="hidden sm:inline">Map</span></ActionButton>
-            {isOwner && <ActionButton icon={readerPreview ? <Edit3 size={16} /> : <Eye size={16} />} onClick={() => setReaderPreview(!readerPreview)} label={readerPreview ? 'Return to creator view' : 'Preview as reader'}>{readerPreview ? 'Creator view' : 'Preview'}</ActionButton>}
+            <ActionButton icon={mapOpen ? <X size={16} /> : <Map size={16} />} onClick={() => setMapOpen(!mapOpen)} primary={mapOpen} label="Map">Map</ActionButton>
+            {isOwner && <ActionButton icon={readerPreview ? <Edit3 size={16} /> : <Eye size={16} />} onClick={() => setReaderPreview(!readerPreview)} label={readerPreview ? 'Edit' : 'Preview'}>{readerPreview ? 'Edit' : 'Preview'}</ActionButton>}
           </div>
         </div>
 
@@ -250,7 +250,7 @@ function StoryContent({ slug }: { slug: string }) {
 
         {selectedVersion && <article className="reader-card">
           <div className="reader-toolbar"><div className="flex items-center gap-2"><span className="eyebrow"><MessageCircle size={13} /> CHAPTER {story.versions.indexOf(selectedVersion) + 1}</span>{selectedVersion.mediaType === 'audio' && <Volume2 size={15} className="text-[var(--aurora)]" />}{selectedVersion.mediaType === 'video' && <Video size={15} className="text-[var(--cyan)]" />}</div><span className="text-xs font-mono text-[var(--text-dim)]">{page + 1} / {Math.max(pages.length, 1)}</span></div>
-          {selectedVersion.isLocked ? <div className="reader-lock"><Lock size={34} className="text-[var(--gold)]" /><h2>This path is waiting for you</h2><p>Unlock this alternate experience for ${selectedVersion.price.toFixed(2)}.</p><button onClick={() => handlePurchase(selectedVersion._id)} disabled={purchasing === selectedVersion._id} className="btn-gold">{purchasing === selectedVersion._id ? <Loader2 size={15} className="animate-spin" /> : <ShoppingCart size={15} />} Unlock path</button></div> : <>
+          {selectedVersion.isLocked ? <div className="reader-lock"><Lock size={34} className="text-[var(--gold)]" /><h2>This path is waiting for you</h2><p>Unlock this alternate experience for ${selectedVersion.price.toFixed(2)}.</p><button onClick={() => handlePurchase(selectedVersion._id)} disabled={purchasing === selectedVersion._id} className="btn-gold">{purchasing === selectedVersion._id ? <Loader2 size={15} className="animate-spin" /> : <ShoppingCart size={15} />} Unlock</button></div> : <>
             {selectedVersion.mediaType === 'audio' && selectedVersion.mediaUrl && <div className="reader-media"><div className="eyebrow"><Headphones size={13} /> AMBIENT SOUND</div><audio className="mt-3 w-full" controls src={selectedVersion.mediaUrl} /></div>}
             {selectedVersion.mediaType === 'video' && selectedVersion.mediaUrl && <div className="reader-video"><video className="max-h-[34rem] w-full object-contain" controls src={selectedVersion.mediaUrl} /><p className="eyebrow mt-3"><Video size={13} /> IMMERSIVE SCENE</p></div>}
             <div className="reader-body"><h2>{selectedVersion.title}</h2><div className="story-prose animate-fade-in" key={`${selectedVersion._id}-${page}`} dangerouslySetInnerHTML={{ __html: currentPage.replace(/\n/g, '<br />') }} /></div>
@@ -261,14 +261,14 @@ function StoryContent({ slug }: { slug: string }) {
 
         <div className="mt-8 flex flex-wrap justify-center gap-2">
           {showingOwnerTools ? <>
-            <Link href={`/write/edit/${story.slug}`} className="story-action-button btn-primary"><Edit3 size={16} /><span>Edit story</span></Link>
-            <Link href="/dashboard" className="story-action-button btn-ghost"><Layers3 size={16} /><span>Manage story</span></Link>
-            <Link href={`/write/edit/${story.slug}?new=chapter`} className="story-action-button btn-ghost"><GitFork size={16} /><span>Add chapter</span></Link>
+            <Link href={`/write/edit/${story.slug}`} className="story-action-button btn-primary"><Edit3 size={16} /><span>Edit</span></Link>
+            <Link href="/dashboard" className="story-action-button btn-ghost"><Layers3 size={16} /><span>Manage</span></Link>
+            <Link href={`/write/edit/${story.slug}?new=chapter`} className="story-action-button btn-ghost"><GitFork size={16} /><span>Chapter</span></Link>
           </> : <>
             {!isOwner && <ActionButton icon={busyAction === 'clone' ? <Loader2 size={16} className="animate-spin" /> : <Copy size={16} />} onClick={handleClone} disabled={busyAction !== null} label="Clone this story">Clone</ActionButton>}
-            {!isOwner && <ActionButton icon={busyAction === 'continue' ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} onClick={handleContinue} disabled={busyAction !== null || selectedVersion?.isLocked} primary label="Create alternate ending">Create alternate</ActionButton>}
-            {lockedPaths > 0 && <ActionButton icon={busyAction === 'all' ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />} onClick={handlePurchaseComplete} disabled={busyAction !== null} label="Unlock all paths">Unlock all</ActionButton>}
-            {!isOwner && <Link href={`/u/${story.authorUsername}`} className="story-action-button btn-ghost"><Link2 size={16} /><span>Meet author</span></Link>}
+            {!isOwner && <ActionButton icon={busyAction === 'continue' ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} onClick={handleContinue} disabled={busyAction !== null || selectedVersion?.isLocked} primary label="Create">Create</ActionButton>}
+            {lockedPaths > 0 && <ActionButton icon={busyAction === 'all' ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />} onClick={handlePurchaseComplete} disabled={busyAction !== null} label="Unlock">Unlock</ActionButton>}
+            {!isOwner && <Link href={`/u/${story.authorUsername}`} className="story-action-button btn-ghost"><Link2 size={16} /><span>Author</span></Link>}
           </>}
         </div>
       </main>
