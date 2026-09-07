@@ -769,6 +769,11 @@ select {
 
 .input-base::placeholder { color: var(--color-muted); }
 
+.search-field {
+  min-width: 0;
+  padding-left: 3.25rem;
+}
+
 /* Button base */
 .btn-primary {
   background: var(--color-aurora);
