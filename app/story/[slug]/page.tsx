@@ -242,13 +242,13 @@ function StoryContent({ slug }: { slug: string }) {
           </div>
         </div>
 
-        <header className="mb-8 max-w-3xl">
+        <header className="story-header mb-8 w-full">
           <div className="mb-4 flex flex-wrap gap-2">
             {story.genre.map((genre) => <span key={genre} className="rounded-full border border-[var(--border-soft)] px-3 py-1 text-[10px] font-mono tracking-widest text-[var(--text-dim)]">{genre.toUpperCase()}</span>)}
           </div>
           <h1 className="mb-4 font-display text-5xl font-light leading-[0.95] text-[var(--text-bright)] sm:text-7xl">{story.title}</h1>
-          <p className="max-w-2xl text-base leading-relaxed text-[var(--text-dim)]">{story.description}</p>
-          <div className="mt-5 flex flex-wrap items-center gap-4 text-xs font-mono text-[var(--muted)]">
+          <p className="story-description text-base leading-relaxed text-[var(--text-dim)]">{story.description}</p>
+          <div className="story-meta mt-5 flex flex-wrap items-center gap-4 text-xs font-mono text-[var(--muted)]">
             <span className={isOwner ? 'text-[var(--aurora)]' : ''}>{isOwner ? 'YOUR BRANCH' : `@${story.authorUsername}`}</span>
             <span className="flex items-center gap-1"><Clock size={12} /> {story.readingTime} min</span>
             <span className="flex items-center gap-1"><GitBranch size={12} /> {story.versions.length} paths</span>

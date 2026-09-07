@@ -280,6 +280,23 @@ body::before {
 
 .story-prose p { margin-bottom: 1.5em; }
 
+.story-header {
+  min-width: 0;
+}
+
+.story-header h1,
+.story-description {
+  max-width: none;
+}
+
+.story-description {
+  overflow-wrap: anywhere;
+}
+
+.story-meta {
+  max-width: 100%;
+}
+
 .story-action-button {
   min-height: 42px;
   display: inline-flex;
@@ -332,7 +349,7 @@ body::before {
 .reader-settings select {
   border: 1px solid var(--color-border-soft);
   background: var(--color-surface);
-  padding: 0.45rem 0.55rem;
+  padding: 0.45rem 2.75rem 0.45rem 0.75rem;
   color: var(--color-text);
   font-family: var(--font-sans);
   text-transform: none;
@@ -561,6 +578,22 @@ body::before {
   .story-assistant-panel { right: 0.75rem; bottom: 0.75rem; }
 }
 
+@media (min-width: 640px) and (max-width: 1023px) {
+  .story-header {
+    max-width: 100%;
+  }
+
+  .story-description {
+    max-width: 48rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .story-description {
+    max-width: 62rem;
+  }
+}
+
 /* Input base */
 .input-base {
   width: 100%;
@@ -572,6 +605,16 @@ body::before {
   transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
   font-family: 'DM Sans', sans-serif;
+}
+
+/* Keep native select arrows comfortably inset from the right border everywhere. */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%23a7a3c2' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: right 0.85rem center;
+  background-repeat: no-repeat;
+  background-size: 0.75rem auto;
+  padding-right: 2.75rem;
 }
 
 .input-base:focus {
