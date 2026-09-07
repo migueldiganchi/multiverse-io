@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createLoginUrl } from '@/lib/auth-redirect';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
+import Notification from '@/components/Notification';
 import { Sparkles, Loader2, Lock, Unlock, Save, Eye, EyeOff, ArrowRight, Send } from 'lucide-react';
 
 const GENRES = ['Sci-Fi', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Thriller', 'Literary Fiction', 'Adventure', 'Dystopian'];
@@ -26,11 +27,14 @@ function WriteContent() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiResult, setAiResult] = useState('');
+  const [aiStatus, setAiStatus] = useState('');
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [preview, setPreview] = useState(false);
   const promptRef = useRef<HTMLTextAreaElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -126,12 +130,14 @@ function WriteContent() {
         prompt: aiPrompt,
         storyTitle: storyForm.title || createdStory?.title,
         storyDescription: storyForm.description,
+        currentDraft: step === 'version' ? versionForm.content : storyForm.description,
         genre: storyForm.genre[0],
       }),
     });
     const data = await res.json();
     if (data.content) {
       setAiResult(data.content);
+      setAiStatus('');
       setNotice('La propuesta está lista. Revisala antes de usarla.');
     }
     } catch {
@@ -182,9 +188,13 @@ function WriteContent() {
     if (step === 'story') {
       setStoryForm((f) => ({ ...f, description: aiResult }));
       setNotice('Propuesta aplicada a la historia.');
+      setAiStatus('Listo: apliqué la propuesta a la descripción. Ya estoy leyendo este texto para ayudarte a continuar.');
+      requestAnimationFrame(() => descriptionRef.current?.focus());
     } else {
       setVersionForm((f) => ({ ...f, content: f.content + (f.content ? '\n\n' : '') + aiResult }));
       setNotice('Propuesta aplicada al capítulo.');
+      setAiStatus('Listo: agregué la propuesta al capítulo. Ya estoy leyendo este texto para ayudarte a continuar.');
+      requestAnimationFrame(() => contentRef.current?.focus());
     }
     setAiResult('');
     setAiPrompt('');
@@ -230,16 +240,8 @@ function WriteContent() {
           ))}
         </div>
 
-        {error && (
-          <div className="bg-[var(--pulse)]/10 border border-[var(--pulse)]/30 text-[var(--pulse)] text-sm px-4 py-3 mb-6">
-            {error}
-          </div>
-        )}
-        {notice && (
-          <div className="mb-6 border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400" role="status">
-            {notice}
-          </div>
-        )}
+        {error && <Notification type="error" message={error} onDismiss={() => setError('')} />}
+        {notice && <Notification type="success" message={notice} onDismiss={() => setNotice('')} />}
 
         {/* Story step */}
         {step === 'story' && (
@@ -292,6 +294,7 @@ function WriteContent() {
                   ))}
                 </div>
                 <textarea
+                  ref={descriptionRef}
                   className="input-base resize-none"
                   rows={4}
                   placeholder="In one or two sentences, what is this story about?"
@@ -396,6 +399,7 @@ function WriteContent() {
                   dangerouslySetInnerHTML={{ __html: versionForm.content.replace(/\n/g, '<br />') || '<em style="color:var(--muted)">Nothing to preview yet.</em>' }} />
               ) : (
                 <textarea
+                  ref={contentRef}
                   className="input-base resize-none font-[Georgia,serif] text-base leading-relaxed"
                   rows={20}
                   placeholder="Begin your story here..."
@@ -499,6 +503,7 @@ function WriteContent() {
                 }}
               />
 
+              {aiLoading && <div className="ai-status" role="status"><Loader2 size={14} className="animate-spin" /> <span>Estoy leyendo tu idea y preparando una propuesta...</span></div>}
               {aiResult && (
                 <div className="ai-result-card" role="status">
                   <p className="ai-result-label">Resultado</p>
@@ -510,6 +515,7 @@ function WriteContent() {
                   </div>
                 </div>
               )}
+              {aiStatus && <div className="ai-status" role="status"><Sparkles size={14} /> <span>{aiStatus}</span></div>}
 
               {!aiResult && <div className="mb-4 flex flex-wrap gap-2">
                 {['Historia', 'Misterio', 'Giro'].map((suggestion) => (

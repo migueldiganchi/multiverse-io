@@ -497,6 +497,27 @@ body::before {
   animation: fadeIn 0.2s ease both;
 }
 
+.app-notification {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  width: 100%;
+  margin-bottom: 1.25rem;
+  border: 1px solid;
+  border-radius: 0.85rem;
+  padding: 0.8rem 0.9rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  animation: fadeIn 0.2s ease both;
+}
+
+.app-notification svg:first-child { flex: 0 0 auto; margin-top: 0.1rem; }
+.app-notification-success { border-color: rgba(52, 211, 153, 0.35); background: rgba(52, 211, 153, 0.1); color: #6ee7b7; }
+.app-notification-error { border-color: rgba(255, 107, 157, 0.35); background: rgba(255, 107, 157, 0.1); color: #ff9abd; }
+.app-notification-info { border-color: rgba(77, 217, 224, 0.35); background: rgba(77, 217, 224, 0.1); color: var(--color-cyan); }
+.app-notification-dismiss { margin-left: auto; flex: 0 0 auto; opacity: 0.75; }
+.app-notification-dismiss:hover { opacity: 1; }
+
 .story-assistant-launcher {
   position: fixed;
   right: 1.25rem;
@@ -553,6 +574,25 @@ body::before {
   border-radius: 0.85rem;
   background: rgba(108, 99, 255, 0.08);
   padding: 0.85rem;
+}
+
+.ai-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(77, 217, 224, 0.35);
+  border-radius: 0.75rem;
+  background: rgba(77, 217, 224, 0.1);
+  padding: 0.7rem 0.8rem;
+  color: var(--color-cyan);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.ai-status svg {
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
 }
 
 .ai-result-label {

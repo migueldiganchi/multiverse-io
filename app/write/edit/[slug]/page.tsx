@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createLoginUrl } from '@/lib/auth-redirect';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
+import Notification from '@/components/Notification';
 import {
   ArrowLeft, Plus, Save, Loader2, Lock, Unlock,
   Eye, EyeOff, Send, Sparkles, Upload, GitBranch, Globe, GlobeLock
@@ -51,6 +52,7 @@ function EditStoryContent({ slug }: { slug: string }) {
   const [preview, setPreview] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiResult, setAiResult] = useState('');
+  const [aiStatus, setAiStatus] = useState('');
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [newVersion, setNewVersion] = useState<{ title: string; content: string; summary: string; isFree: boolean; price: number | ''; mediaType: 'text' | 'audio' | 'video'; mediaUrl: string; nodeType: 'chapter' | 'alternate'; parentVersionId: string; choices: { label: string; targetVersionId: string }[] }>({ title: '', content: '', summary: '', isFree: true, price: 1.99, mediaType: 'text', mediaUrl: '', nodeType: 'chapter', parentVersionId: '', choices: [] });
@@ -65,6 +67,7 @@ function EditStoryContent({ slug }: { slug: string }) {
   const [success, setSuccess] = useState(createdMessage);
   const [importing, setImporting] = useState(false);
   const promptRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   const importText = async (file: File) => {
     setImporting(true);
@@ -180,12 +183,14 @@ function EditStoryContent({ slug }: { slug: string }) {
         storyTitle: story.title,
         storyDescription: story.description,
         existingVersions: story.versions.map((v) => ({ title: v.title, summary: v.summary })),
+        currentDraft: showNewVersion ? newVersion.content : activeVersion?.content ?? '',
       }),
     });
     const data = await res.json();
     setAiLoading(false);
     if (data.content) {
       setAiResult(data.content);
+      setAiStatus('');
       setSuccess('La propuesta está lista. Revisala antes de usarla.');
     }
   };
@@ -205,11 +210,14 @@ function EditStoryContent({ slug }: { slug: string }) {
     setAiResult('');
     setAiPrompt('');
     setSuccess('Propuesta aplicada al capítulo.');
+    setAiStatus('Listo: agregué la propuesta al capítulo. Ya estoy leyendo este texto para ayudarte a continuar.');
+    requestAnimationFrame(() => contentRef.current?.focus());
   };
 
   const discardAiResult = () => {
     setAiResult('');
     setAiPrompt('');
+    setAiStatus('');
     setSuccess('Propuesta descartada. El bot está listo para empezar de nuevo.');
   };
 
@@ -236,8 +244,8 @@ function EditStoryContent({ slug }: { slug: string }) {
             <ArrowLeft size={14} /> DASHBOARD
           </Link>
           <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
-            {success && <span className="text-xs text-emerald-500 font-mono">{success}</span>}
-            {error && <span className="text-xs text-[var(--pulse)] font-mono">{error}</span>}
+            {success && <Notification type="success" message={success} onDismiss={() => setSuccess('')} />}
+            {error && <Notification type="error" message={error} onDismiss={() => setError('')} />}
             <label className="flex cursor-pointer items-center gap-1 text-xs text-[var(--text-dim)] hover:text-[var(--text)]">
               {importing ? <Loader2 size={11} className="animate-spin" /> : <Upload size={11} />} Import
               <input type="file" accept=".txt,.md,.csv,text/plain,text/markdown,text/csv" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importText(file); event.target.value = ''; }} />
@@ -434,6 +442,7 @@ function EditStoryContent({ slug }: { slug: string }) {
                 ) : (
                   <>
                     <textarea
+                      ref={contentRef}
                       className="input-base resize-none font-[Georgia,serif] text-base leading-relaxed"
                       rows={18}
                       placeholder="Write your story..."
@@ -570,6 +579,7 @@ function EditStoryContent({ slug }: { slug: string }) {
               }
             }}
           />
+          {aiLoading && <div className="ai-status" role="status"><Loader2 size={14} className="animate-spin" /> <span>Estoy leyendo el capítulo y preparando una propuesta...</span></div>}
           {aiResult && (
             <div className="ai-result-card" role="status">
               <p className="ai-result-label">Resultado</p>
@@ -581,6 +591,7 @@ function EditStoryContent({ slug }: { slug: string }) {
               </div>
             </div>
           )}
+          {aiStatus && <div className="ai-status" role="status"><Sparkles size={14} /> <span>{aiStatus}</span></div>}
           {!aiResult && <div className="mb-4 flex flex-wrap gap-2">
           {['Tensión', 'Misterio', 'Giro'].map((suggestion) => (
               <button key={suggestion} type="button" onClick={() => {
