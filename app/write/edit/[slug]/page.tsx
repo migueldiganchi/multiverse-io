@@ -61,7 +61,7 @@ function EditStoryContent({ slug }: { slug: string }) {
     if (typeof window === 'undefined') return '';
     const created = new URLSearchParams(window.location.search).get('created');
     if (created === 'clone') return 'Branch cloned successfully. You can now edit your copy.';
-    if (created === 'continuation') return 'Continuation created successfully. Add the next version here.';
+    if (created === 'continuation') return 'Chapter created from the selected node. Add the next part here.';
     return '';
   })();
   const [success, setSuccess] = useState(createdMessage);

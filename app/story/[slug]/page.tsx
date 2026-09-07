@@ -300,9 +300,9 @@ function StoryContent({ slug }: { slug: string }) {
             <Link href="/dashboard" className="story-action-button btn-ghost"><Layers3 size={16} /><span>Manage</span></Link>
             <Link href={`/write/edit/${story.slug}?new=chapter`} className="story-action-button btn-ghost"><GitFork size={16} /><span>Chapter</span></Link>
           </> : <>
-            {!isOwner && <ActionButton icon={busyAction === 'clone' ? <Loader2 size={16} className="animate-spin" /> : <Copy size={16} />} onClick={handleClone} disabled={busyAction !== null} label="Clone this story">Clone</ActionButton>}
-            {!isOwner && <ActionButton icon={busyAction === 'continue' ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} onClick={() => handleContinue('alternate')} disabled={busyAction !== null || selectedVersion?.isLocked} primary label="Alternate">Alternate</ActionButton>}
-            {!isOwner && <ActionButton icon={<GitFork size={16} />} onClick={() => handleContinue('chapter')} disabled={busyAction !== null || selectedVersion?.isLocked} label="Chapter">Chapter</ActionButton>}
+            {!isOwner && <ActionButton icon={busyAction === 'clone' ? <Loader2 size={16} className="animate-spin" /> : <Copy size={16} />} onClick={handleClone} disabled={busyAction !== null} label="Make a personal copy of this story">Clone</ActionButton>}
+            {!isOwner && <ActionButton icon={busyAction === 'continue' ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} onClick={() => handleContinue('alternate')} disabled={busyAction !== null || selectedVersion?.isLocked} primary label="Create an alternate ending from this node">Alternate</ActionButton>}
+            {!isOwner && <ActionButton icon={<GitFork size={16} />} onClick={() => handleContinue('chapter')} disabled={busyAction !== null || selectedVersion?.isLocked} label="Add a new chapter after this node">Chapter</ActionButton>}
             {lockedPaths > 0 && <ActionButton icon={busyAction === 'all' ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />} onClick={handlePurchaseComplete} disabled={busyAction !== null} label="Unlock">Unlock</ActionButton>}
             {!isOwner && <Link href={`/u/${story.authorUsername}`} className="story-action-button btn-ghost"><Link2 size={16} /><span>Author</span></Link>}
           </>}
