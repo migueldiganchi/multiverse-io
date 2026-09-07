@@ -498,11 +498,14 @@ body::before {
 }
 
 .app-notification {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 100;
   display: flex;
   align-items: flex-start;
   gap: 0.65rem;
-  width: 100%;
-  margin-bottom: 1.25rem;
+  width: min(28rem, calc(100vw - 2rem));
   border: 1px solid;
   border-radius: 0.85rem;
   padding: 0.8rem 0.9rem;
@@ -517,6 +520,14 @@ body::before {
 .app-notification-info { border-color: rgba(77, 217, 224, 0.35); background: rgba(77, 217, 224, 0.1); color: var(--color-cyan); }
 .app-notification-dismiss { margin-left: auto; flex: 0 0 auto; opacity: 0.75; }
 .app-notification-dismiss:hover { opacity: 1; }
+
+@media (max-width: 639px) {
+  .app-notification {
+    top: 0.75rem;
+    right: 0.75rem;
+    width: calc(100vw - 1.5rem);
+  }
+}
 
 .story-assistant-launcher {
   position: fixed;
