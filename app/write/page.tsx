@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { createLoginUrl } from '@/lib/auth-redirect';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
-import { Sparkles, Loader2, Lock, Unlock, Save, Eye, EyeOff, ArrowRight, X } from 'lucide-react';
+import { Sparkles, Loader2, Lock, Unlock, Save, Eye, EyeOff, ArrowRight, Send, X } from 'lucide-react';
 
 const GENRES = ['Sci-Fi', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Thriller', 'Literary Fiction', 'Adventure', 'Dystopian'];
 
@@ -29,6 +29,7 @@ function WriteContent() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [preview, setPreview] = useState(false);
+  const promptRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -173,6 +174,12 @@ function WriteContent() {
     } finally {
       setAiLoading(false);
     }
+  };
+
+  const sendPrompt = () => {
+    const prompt = aiPrompt.trim();
+    if (!prompt || aiLoading) return;
+    void generateWithAI(step === 'story' ? 'story' : 'story');
   };
 
   if (authLoading || !user) return null;
@@ -469,21 +476,32 @@ function WriteContent() {
               </div>
 
               <textarea
+                ref={promptRef}
                 className="input-base resize-none mb-4"
                 rows={4}
                 placeholder="What should I create?"
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    sendPrompt();
+                  }
+                }}
               />
 
-              <div className="grid grid-cols-1 gap-3">
-                <button
-                  onClick={() => generateWithAI(step === 'story' ? 'story' : 'story')}
-                  disabled={aiLoading || !aiPrompt}
-                  className="btn-ghost text-sm justify-center"
-                >
-                  {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                  Create
+              <div className="mb-4 flex flex-wrap gap-2">
+                {['Historia', 'Misterio', 'Giro'].map((suggestion) => (
+                  <button key={suggestion} type="button" onClick={() => {
+                    setAiPrompt(suggestion);
+                    requestAnimationFrame(() => promptRef.current?.focus());
+                  }} className="chat-suggestion">{suggestion}</button>
+                ))}
+              </div>
+              <div className="chat-actions">
+                <button type="button" onClick={() => setShowAiPanel(false)} className="btn-ghost chat-close">Cerrar</button>
+                <button type="button" onClick={sendPrompt} disabled={!aiPrompt.trim() || aiLoading} className="btn-primary chat-send">
+                  {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Enviar
                 </button>
               </div>
           </div>

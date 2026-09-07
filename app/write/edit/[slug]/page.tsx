@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,7 +9,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import {
   ArrowLeft, Plus, Save, Loader2, Lock, Unlock,
-  Eye, EyeOff, Sparkles, Upload, X, GitBranch, Globe, GlobeLock
+  Eye, EyeOff, Send, Sparkles, Upload, X, GitBranch, Globe, GlobeLock
 } from 'lucide-react';
 
 interface Version {
@@ -56,6 +56,7 @@ function EditStoryContent({ slug }: { slug: string }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [importing, setImporting] = useState(false);
+  const promptRef = useRef<HTMLTextAreaElement>(null);
 
   const importText = async (file: File) => {
     setImporting(true);
@@ -187,6 +188,11 @@ function EditStoryContent({ slug }: { slug: string }) {
       setShowAiPanel(false);
       setAiPrompt('');
     }
+  };
+
+  const sendPrompt = () => {
+    if (!aiPrompt.trim() || aiLoading) return;
+    void generateAI('story');
   };
 
   if (loading || authLoading) return (
@@ -543,20 +549,31 @@ function EditStoryContent({ slug }: { slug: string }) {
               </button>
             </div>
             <textarea
-              className="input-base resize-none mb-4"
-              rows={4}
-              placeholder="What should I create?"
-              value={aiPrompt}
-              onChange={(e) => setAiPrompt(e.target.value)}
+            ref={promptRef}
+            className="input-base resize-none mb-4"
+            rows={4}
+            placeholder="What should I create?"
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendPrompt();
+              }
+            }}
             />
-            <div className="grid grid-cols-1 gap-3">
-            <button
-              onClick={() => generateAI('story')}
-              disabled={aiLoading || !aiPrompt}
-              className="btn-ghost text-sm justify-center"
-            >
-              {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-              Create
+            <div className="mb-4 flex flex-wrap gap-2">
+            {['Tensión', 'Misterio', 'Giro'].map((suggestion) => (
+              <button key={suggestion} type="button" onClick={() => {
+                setAiPrompt(suggestion);
+                requestAnimationFrame(() => promptRef.current?.focus());
+              }} className="chat-suggestion">{suggestion}</button>
+            ))}
+            </div>
+            <div className="chat-actions">
+            <button type="button" onClick={() => setShowAiPanel(false)} className="btn-ghost chat-close">Cerrar</button>
+            <button type="button" onClick={sendPrompt} disabled={!aiPrompt.trim() || aiLoading} className="btn-primary chat-send">
+              {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Enviar
             </button>
             </div>
           </div>
