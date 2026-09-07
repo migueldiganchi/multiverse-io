@@ -87,7 +87,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
         isFree: true, price: 0, purchasedBy: [], viewCount: 0, likeCount: 0,
       }));
     const title = isContinuation
-      ? `Chapter after ${source.title}`
+      ? `New chapter — ${source.title}`
       : isAlternate
         ? `Alternate of ${source.title}`
         : `Branch of ${source.title}`;

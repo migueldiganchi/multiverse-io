@@ -6,10 +6,11 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
+import Notification from '@/components/Notification';
 import { createLoginUrl } from '@/lib/auth-redirect';
 import {
   BookOpen, GitBranch, Eye, DollarSign, PenTool,
-  Loader2, TrendingUp, Lock, Unlock, Plus, ExternalLink
+  Loader2, TrendingUp, Lock, Unlock, Plus, ExternalLink, Trash2
 } from 'lucide-react';
 
 interface Story {
@@ -33,6 +34,8 @@ function DashboardContent() {
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'stories' | 'earnings'>('stories');
+  const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -47,6 +50,25 @@ function DashboardContent() {
       .then((d) => { setStories(d.stories || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, [user]);
+
+  const deleteStory = async (story: Story) => {
+    if (!window.confirm(`Delete "${story.title}"? This cannot be undone.`)) return;
+    setDeleting(story._id);
+    try {
+      const response = await fetch(`/api/stories/${story.slug}`, { method: 'DELETE' });
+      const data = await response.json();
+      if (!response.ok) {
+        setNotice({ type: 'error', text: data.error || 'The story could not be deleted.' });
+        return;
+      }
+      setStories((current) => current.filter((item) => item._id !== story._id));
+      setNotice({ type: 'success', text: `"${story.title}" was deleted.` });
+    } catch {
+      setNotice({ type: 'error', text: 'The story could not be deleted. Check your connection and try again.' });
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   const totalViews = stories.reduce((a, s) => a + s.totalViews, 0);
   const totalEarnings = stories.reduce((a, s) => a + s.totalEarnings, 0);
@@ -151,7 +173,7 @@ function DashboardContent() {
                         </span>
                         {story.originType && story.originType !== 'original' && (
                           <span className="text-[10px] font-mono px-2 py-0.5 border border-[var(--aurora-dim)] text-[var(--aurora)]">
-                            {story.originType === 'clone' ? 'CLONED BRANCH' : 'CONTINUATION'}
+                            {story.originType === 'clone' ? 'MY COPY' : 'MY CHAPTER'}
                           </span>
                         )}
                       </div>
@@ -183,11 +205,22 @@ function DashboardContent() {
                       >
                         EDIT
                       </Link>
+                      <button
+                        type="button"
+                        onClick={() => void deleteStory(story)}
+                        disabled={deleting === story._id}
+                        className="text-[var(--pulse)] transition-colors hover:text-[var(--text-bright)] disabled:opacity-40"
+                        title="Delete this story or branch"
+                        aria-label={`Delete ${story.title}`}
+                      >
+                        {deleting === story._id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                      </button>
                     </div>
                   </div>
                 ))}
               </div>
             )}
+            {notice && <Notification type={notice.type} message={notice.text} onDismiss={() => setNotice(null)} />}
           </>
         )}
 
