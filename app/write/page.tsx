@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createLoginUrl } from '@/lib/auth-redirect';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
-import { Sparkles, Loader2, Lock, Unlock, Save, Eye, EyeOff, ArrowRight, Send, X } from 'lucide-react';
+import { Sparkles, Loader2, Lock, Unlock, Save, Eye, EyeOff, ArrowRight, Send } from 'lucide-react';
 
 const GENRES = ['Sci-Fi', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Thriller', 'Literary Fiction', 'Adventure', 'Dystopian'];
 
@@ -465,14 +465,9 @@ function WriteContent() {
         {/* Floating AI story assistant */}
         {showAiPanel && (
           <div className="story-assistant-panel">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <Sparkles className="text-[var(--aurora)]" size={20} />
-                  <div><h3 className="font-display text-xl font-light text-[var(--text-bright)]">Story bot</h3><p className="text-xs text-[var(--text-dim)]">Tell me what you want to make.</p></div>
-                </div>
-                <button onClick={() => setShowAiPanel(false)} className="text-[var(--muted)] hover:text-[var(--text)]">
-                  <X size={18} />
-                </button>
+              <div className="mb-6 flex items-center gap-3">
+                <Sparkles className="text-[var(--aurora)]" size={20} />
+                <div><h3 className="font-display text-xl font-light text-[var(--text-bright)]">Story bot</h3><p className="text-xs text-[var(--text-dim)]">Tell me what you want to make.</p></div>
               </div>
 
               <textarea
