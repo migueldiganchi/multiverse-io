@@ -511,6 +511,45 @@ body::before {
   color: var(--color-text);
 }
 
+.ai-result-card {
+  margin-bottom: 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-aurora), var(--color-border) 35%);
+  border-radius: 0.85rem;
+  background: rgba(108, 99, 255, 0.08);
+  padding: 0.85rem;
+}
+
+.ai-result-label {
+  margin-bottom: 0.5rem;
+  color: var(--color-aurora);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ai-result-content {
+  max-height: 12rem;
+  overflow-y: auto;
+  color: var(--color-text-mid);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.ai-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.ai-result-actions button {
+  min-height: 38px;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.72rem;
+}
+
 @media (max-width: 639px) {
   .story-action-button { width: 42px; height: 42px; padding: 0; }
   .story-action-button span { display: none; }
