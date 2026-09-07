@@ -124,7 +124,7 @@ export default function FaqPage() {
                         <span className="font-display text-xl font-light">{item.question}</span>
                         <ChevronDown size={18} className={`flex-shrink-0 text-[var(--aurora)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                       </button>
-                      {isOpen && <p className="px-6 pb-6 leading-7 text-[var(--text-dim)]">{item.answer}</p>}
+                      {isOpen && <p className="px-6 pb-6 text-left leading-7 text-[var(--text-dim)]">{item.answer}</p>}
                     </div>
                   );
                 })}
