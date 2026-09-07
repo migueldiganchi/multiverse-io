@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { createLoginUrl } from '@/lib/auth-redirect';
 import Navbar from '@/components/Navbar';
+import Notification from '@/components/Notification';
 import {
   ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Clock, Copy, Eye,
   Edit3, GitBranch, GitFork, Headphones, Layers3, Link2, Loader2, Lock, Map,
@@ -256,7 +257,7 @@ function StoryContent({ slug }: { slug: string }) {
           </div>
         </header>
 
-        {notice && <div className={`mb-6 flex items-center justify-between rounded-xl border px-4 py-3 text-sm ${notice.type === 'success' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-[var(--pulse)]/30 bg-[var(--pulse)]/10 text-[var(--pulse)]'}`} role="status"><span>{notice.text}</span><button onClick={() => setNotice(null)} aria-label="Dismiss"><X size={15} /></button></div>}
+        {notice && <Notification type={notice.type} message={notice.text} onDismiss={() => setNotice(null)} />}
 
         {settingsOpen && <section className="reader-settings mb-6 animate-fade-in" aria-label="Reading style">
           <div><p className="eyebrow"><Settings2 size={13} /> READING STYLE</p><p className="mt-1 text-xs text-[var(--text-dim)]">Make every story feel like yours.</p></div>

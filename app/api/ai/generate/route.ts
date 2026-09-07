@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const user = await getServerUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { type, prompt, storyTitle, storyDescription, genre, existingVersions } = await req.json();
+    const { type, prompt, storyTitle, storyDescription, genre, existingVersions, currentDraft } = await req.json();
 
     const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
@@ -22,7 +22,9 @@ export async function POST(req: NextRequest) {
       Genre: ${genre || 'Literary Fiction'}
       Title: ${storyTitle}
       
-      Write a captivating story excerpt (400-600 words) based on: "${prompt}"
+      Current draft context: "${currentDraft || 'There is no draft yet.'}"
+       
+      Write a captivating story excerpt (400-600 words) based on: "${prompt}". If a current draft exists, continue or improve it instead of ignoring it.
       
       Make it atmospheric, thought-provoking, and leave readers wanting more. Use vivid descriptions and authentic dialogue where appropriate.`;
     } else if (type === 'alternate-ending') {
