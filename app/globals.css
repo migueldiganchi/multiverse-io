@@ -299,6 +299,50 @@ body::before {
   max-width: 100%;
 }
 
+.editor-fields {
+  display: grid;
+  min-width: 0;
+  gap: 1.5rem;
+  border: 0;
+  padding: 0;
+}
+
+.editor-fields > * {
+  min-width: 0;
+}
+
+.editor-fields > input,
+.editor-fields > .input-base,
+.editor-fields > div:not(.preview-content) {
+  border-radius: 0.75rem;
+}
+
+.editor-fields > div:has(> label) {
+  padding: 1.15rem;
+  border: 1px solid var(--color-border-soft);
+  background: rgba(12, 12, 26, 0.42);
+}
+
+.editor-fields > .preview-content {
+  margin-top: 0.25rem;
+  border-radius: 1rem;
+  background: linear-gradient(145deg, rgba(12, 12, 26, 0.9), rgba(7, 7, 15, 0.95));
+}
+
+.editor-fields > div:last-child {
+  margin-top: 0.25rem;
+}
+
+.editor-fields:disabled {
+  opacity: 1;
+}
+
+.editor-fields:disabled input,
+.editor-fields:disabled select,
+.editor-fields:disabled textarea {
+  opacity: 0.72;
+}
+
 .story-header {
   min-width: 0;
 }

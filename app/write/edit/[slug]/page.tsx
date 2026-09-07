@@ -342,7 +342,7 @@ function EditStoryContent({ slug }: { slug: string }) {
                   </div>
                 </div>
 
-                <fieldset disabled={preview} className="contents">
+                <fieldset disabled={preview} className="editor-fields">
                 <input
                   type="text"
                   className="input-base"
