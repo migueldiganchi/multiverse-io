@@ -69,7 +69,7 @@ function ExploreContent() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)]" size={16} />
             <input
               type="text"
-              className="input-base pl-11"
+              className="input-base search-field"
               placeholder="Search stories, authors, themes..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}

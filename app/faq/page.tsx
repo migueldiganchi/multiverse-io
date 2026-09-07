@@ -156,7 +156,7 @@ export default function FaqPage() {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search by question or answer..."
-                className="min-w-0 flex-1 bg-transparent text-[var(--text-bright)] outline-none placeholder:text-[var(--muted)]"
+                className="search-field min-w-0 flex-1 bg-transparent text-[var(--text-bright)] outline-none placeholder:text-[var(--muted)]"
               />
               <button type="button" onClick={() => setSearchOpen(false)} aria-label="Close search" className="text-[var(--text-dim)] transition-colors hover:text-[var(--text-bright)]">
                 <X size={19} />
