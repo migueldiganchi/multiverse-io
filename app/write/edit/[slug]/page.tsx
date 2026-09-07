@@ -9,7 +9,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import {
   ArrowLeft, Plus, Save, Loader2, Lock, Unlock,
-  Eye, EyeOff, Sparkles, X, GitBranch, Globe, GlobeLock
+  Eye, EyeOff, Sparkles, Upload, X, GitBranch, Globe, GlobeLock
 } from 'lucide-react';
 
 interface Version {
@@ -23,6 +23,8 @@ interface Version {
   likeCount: number;
   mediaType?: 'text' | 'audio' | 'video';
   mediaUrl?: string;
+  nodeType?: 'chapter' | 'alternate';
+  parentVersionId?: string;
   choices?: { label: string; targetVersionId: string }[];
 }
 
@@ -50,9 +52,18 @@ function EditStoryContent({ slug }: { slug: string }) {
   const [aiPrompt, setAiPrompt] = useState('');
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
-  const [newVersion, setNewVersion] = useState<{ title: string; content: string; summary: string; isFree: boolean; price: number | ''; mediaType: 'text' | 'audio' | 'video'; mediaUrl: string; choices: { label: string; targetVersionId: string }[] }>({ title: '', content: '', summary: '', isFree: true, price: 1.99, mediaType: 'text', mediaUrl: '', choices: [] });
+  const [newVersion, setNewVersion] = useState<{ title: string; content: string; summary: string; isFree: boolean; price: number | ''; mediaType: 'text' | 'audio' | 'video'; mediaUrl: string; nodeType: 'chapter' | 'alternate'; parentVersionId: string; choices: { label: string; targetVersionId: string }[] }>({ title: '', content: '', summary: '', isFree: true, price: 1.99, mediaType: 'text', mediaUrl: '', nodeType: 'chapter', parentVersionId: '', choices: [] });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [importing, setImporting] = useState(false);
+
+  const importText = async (file: File) => {
+    setImporting(true);
+    const content = await file.text();
+    if (showNewVersion) setNewVersion((current) => ({ ...current, content: current.content ? `${current.content}\n\n${content}` : content }));
+    else setActiveVersion((current) => current ? { ...current, content: current.content ? `${current.content}\n\n${content}` : content } : current);
+    setImporting(false);
+  };
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -127,7 +138,7 @@ function EditStoryContent({ slug }: { slug: string }) {
       setStory((s) => s ? { ...s, versions: [...s.versions, data.version] } : s);
       setActiveVersion(data.version);
       setShowNewVersion(false);
-      setNewVersion({ title: '', content: '', summary: '', isFree: true, price: 1.99, mediaType: 'text', mediaUrl: '', choices: [] });
+      setNewVersion({ title: '', content: '', summary: '', isFree: true, price: 1.99, mediaType: 'text', mediaUrl: '', nodeType: 'chapter', parentVersionId: '', choices: [] });
       setSuccess('Version added!');
       setTimeout(() => setSuccess(''), 2000);
     } else {
@@ -208,6 +219,10 @@ function EditStoryContent({ slug }: { slug: string }) {
           <div className="flex items-center gap-3">
             {success && <span className="text-xs text-emerald-500 font-mono">{success}</span>}
             {error && <span className="text-xs text-[var(--pulse)] font-mono">{error}</span>}
+            <label className="flex cursor-pointer items-center gap-1 text-xs text-[var(--text-dim)] hover:text-[var(--text)]">
+              {importing ? <Loader2 size={11} className="animate-spin" /> : <Upload size={11} />} Import
+              <input type="file" accept=".txt,.md,.csv,text/plain,text/markdown,text/csv" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importText(file); event.target.value = ''; }} />
+            </label>
             <button
               onClick={togglePublish}
               className={`flex items-center gap-2 text-xs border px-3 py-2 font-mono transition-all ${
@@ -305,7 +320,20 @@ function EditStoryContent({ slug }: { slug: string }) {
                   }}
                 />
 
-                <div className="grid gap-3 sm:grid-cols-[9rem_1fr]">
+                <div className="grid gap-3 sm:grid-cols-[9rem_10rem_1fr]">
+                  <select
+                    className="input-base"
+                    value={showNewVersion ? newVersion.nodeType : activeVersion?.nodeType ?? 'chapter'}
+                    onChange={(e) => {
+                      const nodeType = e.target.value as 'chapter' | 'alternate';
+                      if (showNewVersion) setNewVersion((f) => ({ ...f, nodeType }));
+                      else setActiveVersion((v) => v ? { ...v, nodeType } : v);
+                    }}
+                    aria-label="Node type"
+                  >
+                    <option value="chapter">Chapter</option>
+                    <option value="alternate">Alternate</option>
+                  </select>
                   <select
                     className="input-base"
                     value={showNewVersion ? newVersion.mediaType : activeVersion?.mediaType ?? 'text'}
@@ -330,6 +358,19 @@ function EditStoryContent({ slug }: { slug: string }) {
                       else setActiveVersion((v) => v ? { ...v, mediaUrl } : v);
                     }}
                   />
+                  <select
+                    className="input-base"
+                    value={showNewVersion ? newVersion.parentVersionId : activeVersion?.parentVersionId ?? ''}
+                    onChange={(e) => {
+                      const parentVersionId = e.target.value;
+                      if (showNewVersion) setNewVersion((f) => ({ ...f, parentVersionId }));
+                      else setActiveVersion((v) => v ? { ...v, parentVersionId } : v);
+                    }}
+                    aria-label="Parent node"
+                  >
+                    <option value="">Root node</option>
+                    {story.versions.map((version) => <option key={version._id} value={version._id}>{version.title}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label className="mb-2 block text-[10px] font-mono tracking-widest text-[var(--text-dim)]">BRANCHING CHOICES (JSON)</label>

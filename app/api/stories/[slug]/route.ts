@@ -73,8 +73,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     if (accessibleVersions.length === 0) {
       return NextResponse.json({ error: 'Purchase a version before creating a continuation' }, { status: 402 });
     }
-    const isContinuation = body.action === 'continue';
-    const selectedVersion = isContinuation && body.versionId
+    const isContinuation = body.action === 'continue' || body.action === 'chapter';
+    const isAlternate = body.action === 'alternate';
+    const selectedVersion = (isContinuation || isAlternate) && body.versionId
       ? accessibleVersions.find((version: { _id: { toString(): string } }) => version._id.toString() === body.versionId)
       : undefined;
     if (isContinuation && !selectedVersion) {
@@ -85,7 +86,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
         title: version.title, content: version.content, summary: version.summary,
         isFree: true, price: 0, purchasedBy: [], viewCount: 0, likeCount: 0,
       }));
-    const title = isContinuation ? `Continuation of ${source.title}` : `Branch of ${source.title}`;
+    const title = isContinuation
+      ? `Chapter after ${source.title}`
+      : isAlternate
+        ? `Alternate of ${source.title}`
+        : `Branch of ${source.title}`;
     const clone = await Story.create({
       title, slug: `${slugify(title, { lower: true, strict: true })}-${uuidv4().slice(0, 8)}`,
       description: source.description, genre: source.genre, tags: source.tags, language: source.language,

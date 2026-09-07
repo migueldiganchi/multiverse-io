@@ -11,7 +11,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     await connectDB();
     const { slug } = await params;
     const body = await req.json();
-    const { title, content, summary, isFree, price, mediaType, mediaUrl, choices } = body;
+    const { title, content, summary, isFree, price, mediaType, mediaUrl, nodeType, parentVersionId, choices } = body;
 
     if (!title || !content) {
       return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
@@ -35,6 +35,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
       likeCount: 0,
       mediaType: mediaType ?? 'text',
       mediaUrl: mediaUrl ?? '',
+      nodeType: nodeType === 'alternate' ? 'alternate' : 'chapter',
+      parentVersionId: parentVersionId ?? '',
       choices: Array.isArray(choices) ? choices : [],
     } as Parameters<typeof story.versions.push>[0]);
 
@@ -61,7 +63,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug
     await connectDB();
     const { slug } = await params;
     const body = await req.json();
-    const { versionId, title, content, summary, isFree, price, mediaType, mediaUrl, choices } = body;
+    const { versionId, title, content, summary, isFree, price, mediaType, mediaUrl, nodeType, parentVersionId, choices } = body;
 
     const story = await Story.findOne({ slug });
     if (!story) return NextResponse.json({ error: 'Story not found' }, { status: 404 });
@@ -78,6 +80,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug
     if (summary !== undefined) version.summary = summary;
     if (mediaType !== undefined) version.mediaType = mediaType;
     if (mediaUrl !== undefined) version.mediaUrl = mediaUrl;
+    if (nodeType !== undefined) version.nodeType = nodeType === 'alternate' ? 'alternate' : 'chapter';
+    if (parentVersionId !== undefined) version.parentVersionId = parentVersionId;
     if (choices !== undefined && Array.isArray(choices)) version.choices = choices;
     if (isFree !== undefined) {
       version.isFree = isFree;

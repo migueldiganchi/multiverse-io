@@ -12,6 +12,8 @@ export interface IVersion {
   likeCount: number;
   mediaType: 'text' | 'audio' | 'video';
   mediaUrl?: string;
+  nodeType: 'chapter' | 'alternate';
+  parentVersionId?: string;
   choices: { label: string; targetVersionId: string }[];
   createdAt: Date;
 }
@@ -59,6 +61,8 @@ const VersionSchema = new Schema<IVersion>(
     likeCount: { type: Number, default: 0 },
     mediaType: { type: String, enum: ['text', 'audio', 'video'], default: 'text' },
     mediaUrl: { type: String, default: '' },
+    nodeType: { type: String, enum: ['chapter', 'alternate'], default: 'chapter' },
+    parentVersionId: { type: String, default: '' },
     choices: [{
       label: { type: String, trim: true },
       targetVersionId: { type: String },
