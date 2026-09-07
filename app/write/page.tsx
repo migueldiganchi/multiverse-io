@@ -392,7 +392,7 @@ function WriteContent() {
               </div>
 
               {preview ? (
-                <div className="story-prose bg-[var(--deep)] border border-[var(--border)] p-6 min-h-64"
+                <div className="preview-content story-prose min-h-64 w-full max-w-full overflow-x-hidden break-words border border-[var(--border)] bg-[var(--deep)] p-4 sm:p-6"
                   dangerouslySetInnerHTML={{ __html: versionForm.content.replace(/\n/g, '<br />') || '<em style="color:var(--muted)">Nothing to preview yet.</em>' }} />
               ) : (
                 <textarea
