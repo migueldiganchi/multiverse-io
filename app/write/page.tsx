@@ -181,7 +181,7 @@ function WriteContent() {
     <div className="min-h-screen bg-[var(--void)]">
       <Navbar />
 
-      <div className="max-w-4xl mx-auto px-6 pt-24 pb-20">
+      <div className="max-w-4xl mx-auto px-6 pt-28 pb-20">
         {/* Header */}
         <div className="mb-10">
           <p className="text-xs font-mono tracking-widest text-[var(--aurora)] mb-3">STUDIO</p>
