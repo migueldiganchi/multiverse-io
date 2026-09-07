@@ -229,13 +229,13 @@ function EditStoryContent({ slug }: { slug: string }) {
     <div className="min-h-screen bg-[var(--void)]">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-6 pt-24 pb-20">
+      <div className="mx-auto w-full max-w-7xl min-w-0 px-4 pt-24 pb-20 sm:px-6">
         {/* Top bar */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-8 flex min-w-0 flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <Link href="/dashboard" className="flex items-center gap-2 text-xs text-[var(--text-dim)] hover:text-[var(--text)] font-mono transition-colors">
             <ArrowLeft size={14} /> DASHBOARD
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
             {success && <span className="text-xs text-emerald-500 font-mono">{success}</span>}
             {error && <span className="text-xs text-[var(--pulse)] font-mono">{error}</span>}
             <label className="flex cursor-pointer items-center gap-1 text-xs text-[var(--text-dim)] hover:text-[var(--text)]">
@@ -259,10 +259,10 @@ function EditStoryContent({ slug }: { slug: string }) {
           </div>
         </div>
 
-        <h1 className="font-display text-4xl font-light text-[var(--text-bright)] mb-2">{story.title}</h1>
-        <p className="text-sm text-[var(--text-dim)] mb-10">{story.description}</p>
+        <h1 className="mb-2 max-w-full break-words font-display text-4xl font-light text-[var(--text-bright)]">{story.title}</h1>
+        <p className="mb-10 max-w-full break-words text-sm text-[var(--text-dim)]">{story.description}</p>
 
-        <div className="grid lg:grid-cols-[260px_1fr] gap-6">
+        <div className="grid min-w-0 gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
           {/* Version sidebar */}
           <div>
             <div className="flex items-center justify-between mb-3">
@@ -303,14 +303,14 @@ function EditStoryContent({ slug }: { slug: string }) {
           </div>
 
           {/* Editor */}
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             {(activeVersion || showNewVersion) && (
               <>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-mono tracking-widest text-[var(--text-dim)]">
+                <div className="flex min-w-0 flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+                  <h3 className="max-w-full break-words text-xs font-mono tracking-widest text-[var(--text-dim)]">
                     {showNewVersion ? 'NEW VERSION' : `EDITING: ${activeVersion?.title}`}
                   </h3>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <button
                       onClick={() => setShowAiPanel(true)}
                       className="flex items-center gap-1 text-xs text-[var(--aurora)] hover:text-[var(--text)] transition-colors"
@@ -425,7 +425,7 @@ function EditStoryContent({ slug }: { slug: string }) {
 
                 {preview ? (
                   <div
-                    className="story-prose bg-[var(--deep)] border border-[var(--border)] p-6 min-h-64"
+                    className="preview-content story-prose min-h-64 w-full max-w-full overflow-x-hidden break-words border border-[var(--border)] bg-[var(--deep)] p-4 sm:p-6"
                     dangerouslySetInnerHTML={{
                       __html: (showNewVersion ? newVersion.content : activeVersion?.content ?? '').replace(/\n/g, '<br />') ||
                         '<em style="color:var(--muted)">Nothing to preview.</em>'

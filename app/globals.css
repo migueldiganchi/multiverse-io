@@ -62,6 +62,13 @@
 
   * {
     @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   button,
@@ -279,6 +286,18 @@ body::before {
 }
 
 .story-prose p { margin-bottom: 1.5em; }
+
+.preview-content {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.preview-content img,
+.preview-content video,
+.preview-content audio,
+.preview-content iframe {
+  max-width: 100%;
+}
 
 .story-header {
   min-width: 0;

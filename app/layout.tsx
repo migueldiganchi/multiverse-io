@@ -13,13 +13,9 @@ export const metadata: Metadata = {
   applicationName: 'Multiverse.io',
   manifest: '/site.webmanifest',
   icons: {
-    icon: [
-      { url: '/favicon.ico', type: 'image/x-icon' },
-      { url: '/favicon-16x16.png', type: 'image/png', sizes: '16x16' },
-      { url: '/favicon-32x32.png', type: 'image/png', sizes: '32x32' },
-    ],
-    shortcut: '/favicon.ico',
-    apple: [{ url: '/apple-touch-icon.png', type: 'image/png', sizes: '180x180' }],
+    icon: [{ url: '/multiverse-logo.png', type: 'image/png', sizes: '370x360' }],
+    shortcut: '/multiverse-logo.png',
+    apple: [{ url: '/multiverse-logo.png', type: 'image/png', sizes: '370x360' }],
   },
 };
 
