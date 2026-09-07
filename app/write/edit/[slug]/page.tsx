@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,7 +9,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import {
   ArrowLeft, Plus, Save, Loader2, Lock, Unlock,
-  Eye, EyeOff, Sparkles, X, GitBranch, Globe, GlobeLock
+  Eye, EyeOff, Send, Sparkles, Upload, GitBranch, Globe, GlobeLock
 } from 'lucide-react';
 
 interface Version {
@@ -23,6 +23,8 @@ interface Version {
   likeCount: number;
   mediaType?: 'text' | 'audio' | 'video';
   mediaUrl?: string;
+  nodeType?: 'chapter' | 'alternate';
+  parentVersionId?: string;
   choices?: { label: string; targetVersionId: string }[];
 }
 
@@ -50,9 +52,26 @@ function EditStoryContent({ slug }: { slug: string }) {
   const [aiPrompt, setAiPrompt] = useState('');
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
-  const [newVersion, setNewVersion] = useState<{ title: string; content: string; summary: string; isFree: boolean; price: number | ''; mediaType: 'text' | 'audio' | 'video'; mediaUrl: string; choices: { label: string; targetVersionId: string }[] }>({ title: '', content: '', summary: '', isFree: true, price: 1.99, mediaType: 'text', mediaUrl: '', choices: [] });
+  const [newVersion, setNewVersion] = useState<{ title: string; content: string; summary: string; isFree: boolean; price: number | ''; mediaType: 'text' | 'audio' | 'video'; mediaUrl: string; nodeType: 'chapter' | 'alternate'; parentVersionId: string; choices: { label: string; targetVersionId: string }[] }>({ title: '', content: '', summary: '', isFree: true, price: 1.99, mediaType: 'text', mediaUrl: '', nodeType: 'chapter', parentVersionId: '', choices: [] });
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const createdMessage = (() => {
+    if (typeof window === 'undefined') return '';
+    const created = new URLSearchParams(window.location.search).get('created');
+    if (created === 'clone') return 'Branch cloned successfully. You can now edit your copy.';
+    if (created === 'continuation') return 'Continuation created successfully. Add the next version here.';
+    return '';
+  })();
+  const [success, setSuccess] = useState(createdMessage);
+  const [importing, setImporting] = useState(false);
+  const promptRef = useRef<HTMLTextAreaElement>(null);
+
+  const importText = async (file: File) => {
+    setImporting(true);
+    const content = await file.text();
+    if (showNewVersion) setNewVersion((current) => ({ ...current, content: current.content ? `${current.content}\n\n${content}` : content }));
+    else setActiveVersion((current) => current ? { ...current, content: current.content ? `${current.content}\n\n${content}` : content } : current);
+    setImporting(false);
+  };
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -80,9 +99,6 @@ function EditStoryContent({ slug }: { slug: string }) {
         setError(loadError.message);
         setLoading(false);
       });
-    const created = new URLSearchParams(window.location.search).get('created');
-    if (created === 'clone') setSuccess('Branch cloned successfully. You can now edit your copy.');
-    if (created === 'continuation') setSuccess('Continuation created successfully. Add the next version here.');
   }, [slug]);
 
   const saveVersionEdit = async () => {
@@ -127,7 +143,7 @@ function EditStoryContent({ slug }: { slug: string }) {
       setStory((s) => s ? { ...s, versions: [...s.versions, data.version] } : s);
       setActiveVersion(data.version);
       setShowNewVersion(false);
-      setNewVersion({ title: '', content: '', summary: '', isFree: true, price: 1.99, mediaType: 'text', mediaUrl: '', choices: [] });
+      setNewVersion({ title: '', content: '', summary: '', isFree: true, price: 1.99, mediaType: 'text', mediaUrl: '', nodeType: 'chapter', parentVersionId: '', choices: [] });
       setSuccess('Version added!');
       setTimeout(() => setSuccess(''), 2000);
     } else {
@@ -178,9 +194,9 @@ function EditStoryContent({ slug }: { slug: string }) {
     }
   };
 
-  const chooseSuggestion = (suggestion: string) => {
-    setAiPrompt(suggestion);
-    setShowAiPanel(true);
+  const sendPrompt = () => {
+    if (!aiPrompt.trim() || aiLoading) return;
+    void generateAI('story');
   };
 
   if (loading || authLoading) return (
@@ -195,11 +211,6 @@ function EditStoryContent({ slug }: { slug: string }) {
     </div>
   );
 
-  const editingVersion = showNewVersion ? newVersion : activeVersion;
-  const setEditingVersion = showNewVersion
-    ? (fn: (v: typeof newVersion) => typeof newVersion) => setNewVersion(fn)
-    : (fn: (v: Version) => Version) => setActiveVersion((v) => v ? fn(v) : v);
-
   return (
     <div className="min-h-screen bg-[var(--void)]">
       <Navbar />
@@ -213,6 +224,10 @@ function EditStoryContent({ slug }: { slug: string }) {
           <div className="flex items-center gap-3">
             {success && <span className="text-xs text-emerald-500 font-mono">{success}</span>}
             {error && <span className="text-xs text-[var(--pulse)] font-mono">{error}</span>}
+            <label className="flex cursor-pointer items-center gap-1 text-xs text-[var(--text-dim)] hover:text-[var(--text)]">
+              {importing ? <Loader2 size={11} className="animate-spin" /> : <Upload size={11} />} Import
+              <input type="file" accept=".txt,.md,.csv,text/plain,text/markdown,text/csv" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importText(file); event.target.value = ''; }} />
+            </label>
             <button
               onClick={togglePublish}
               className={`flex items-center gap-2 text-xs border px-3 py-2 font-mono transition-all ${
@@ -286,7 +301,7 @@ function EditStoryContent({ slug }: { slug: string }) {
                       onClick={() => setShowAiPanel(true)}
                       className="flex items-center gap-1 text-xs text-[var(--aurora)] hover:text-[var(--text)] transition-colors"
                     >
-                      <Sparkles size={11} /> Ask the story bot
+                      <Sparkles size={11} /> Bot
                     </button>
                     <button
                       onClick={() => setPreview(!preview)}
@@ -310,7 +325,20 @@ function EditStoryContent({ slug }: { slug: string }) {
                   }}
                 />
 
-                <div className="grid gap-3 sm:grid-cols-[9rem_1fr]">
+                <div className="grid gap-3 sm:grid-cols-[9rem_10rem_1fr]">
+                  <select
+                    className="input-base"
+                    value={showNewVersion ? newVersion.nodeType : activeVersion?.nodeType ?? 'chapter'}
+                    onChange={(e) => {
+                      const nodeType = e.target.value as 'chapter' | 'alternate';
+                      if (showNewVersion) setNewVersion((f) => ({ ...f, nodeType }));
+                      else setActiveVersion((v) => v ? { ...v, nodeType } : v);
+                    }}
+                    aria-label="Node type"
+                  >
+                    <option value="chapter">Chapter</option>
+                    <option value="alternate">Alternate</option>
+                  </select>
                   <select
                     className="input-base"
                     value={showNewVersion ? newVersion.mediaType : activeVersion?.mediaType ?? 'text'}
@@ -335,6 +363,19 @@ function EditStoryContent({ slug }: { slug: string }) {
                       else setActiveVersion((v) => v ? { ...v, mediaUrl } : v);
                     }}
                   />
+                  <select
+                    className="input-base"
+                    value={showNewVersion ? newVersion.parentVersionId : activeVersion?.parentVersionId ?? ''}
+                    onChange={(e) => {
+                      const parentVersionId = e.target.value;
+                      if (showNewVersion) setNewVersion((f) => ({ ...f, parentVersionId }));
+                      else setActiveVersion((v) => v ? { ...v, parentVersionId } : v);
+                    }}
+                    aria-label="Parent node"
+                  >
+                    <option value="">Root node</option>
+                    {story.versions.map((version) => <option key={version._id} value={version._id}>{version.title}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label className="mb-2 block text-[10px] font-mono tracking-widest text-[var(--text-dim)]">BRANCHING CHOICES (JSON)</label>
@@ -389,22 +430,6 @@ function EditStoryContent({ slug }: { slug: string }) {
                         else setActiveVersion((v) => v ? { ...v, content: val } : v);
                       }}
                     />
-                    <p className="mb-2 text-sm leading-6 text-[var(--text-dim)]">
-                      Choose an idea to open the AI assistant with a ready-to-use prompt:
-                    </p>
-                    <div className="mb-4 flex flex-wrap gap-2">
-                      {['Raise the stakes', 'Reveal a hidden truth', 'Take the story somewhere unexpected'].map((suggestion) => (
-                        <button
-                          key={suggestion}
-                          type="button"
-                          onClick={() => chooseSuggestion(suggestion)}
-                          className="rounded-full border border-[var(--border-soft)] px-3 py-1.5 text-xs text-[var(--text-dim)] transition-colors hover:border-[var(--aurora)] hover:text-[var(--text)]"
-                          aria-label={`Use suggestion: ${suggestion}`}
-                        >
-                          {suggestion}
-                        </button>
-                      ))}
-                    </div>
                   </>
                 )}
 
@@ -506,53 +531,46 @@ function EditStoryContent({ slug }: { slug: string }) {
 
       {!showAiPanel && (
         <button className="story-assistant-launcher" onClick={() => setShowAiPanel(true)} aria-label="Open story bot">
-          <Sparkles size={17} /> <span>Ask story bot</span>
+          <Sparkles size={17} /> <span>Bot</span>
         </button>
       )}
 
       {/* Floating AI story assistant */}
       {showAiPanel && (
         <div className="story-assistant-panel">
-          <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <Sparkles className="text-[var(--aurora)]" size={20} />
-                <div><h3 className="font-display text-xl font-light text-[var(--text-bright)]">Story bot</h3><p className="text-xs text-[var(--text-dim)]">Tell me what should happen next.</p></div>
-              </div>
-              <button onClick={() => setShowAiPanel(false)} className="text-[var(--muted)] hover:text-[var(--text)]">
-                <X size={18} />
-              </button>
-            </div>
-            <textarea
-              className="input-base resize-none mb-4"
-              rows={4}
-              placeholder="“Raise the stakes”, “add a mysterious chapter”, or “let the hero escape”..."
-              value={aiPrompt}
-              onChange={(e) => setAiPrompt(e.target.value)}
-            />
-            <div className="mb-3 flex flex-wrap gap-2">
-              {['Raise the stakes', 'Reveal a hidden truth', 'Add a surprising chapter'].map((suggestion) => (
-                <button key={suggestion} onClick={() => setAiPrompt(suggestion)} className="rounded-full border border-[var(--border-soft)] px-3 py-1.5 text-[11px] text-[var(--text-dim)] hover:border-[var(--aurora)] hover:text-[var(--text)]">{suggestion}</button>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <button
-                onClick={() => generateAI('story')}
-                disabled={aiLoading || !aiPrompt}
-                className="btn-ghost text-sm justify-center"
-              >
-                {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                Write next chapter
-              </button>
-              <button
-                onClick={() => generateAI('alternate-ending')}
-                disabled={aiLoading || !aiPrompt}
-                className="btn-ghost text-sm justify-center"
-              >
-                {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <GitBranch size={14} />}
-                Suggest alternate path
-              </button>
-            </div>
+          <div className="mb-4 flex items-center gap-3">
+            <Sparkles className="text-[var(--aurora)]" size={20} />
+            <div><h3 className="font-display text-xl font-light text-[var(--text-bright)]">Story bot</h3><p className="text-xs text-[var(--text-dim)]">Tell me what should happen next.</p></div>
           </div>
+          <textarea
+            ref={promptRef}
+            className="input-base resize-none mb-4"
+            rows={4}
+            placeholder="What should I create?"
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendPrompt();
+              }
+            }}
+          />
+          <div className="mb-4 flex flex-wrap gap-2">
+            {['Tensión', 'Misterio', 'Giro'].map((suggestion) => (
+              <button key={suggestion} type="button" onClick={() => {
+                setAiPrompt(suggestion);
+                requestAnimationFrame(() => promptRef.current?.focus());
+              }} className="chat-suggestion">{suggestion}</button>
+            ))}
+          </div>
+          <div className="chat-actions">
+            <button type="button" onClick={() => setShowAiPanel(false)} className="btn-ghost chat-close">Cerrar</button>
+            <button type="button" onClick={sendPrompt} disabled={!aiPrompt.trim() || aiLoading} className="btn-primary chat-send">
+              {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Enviar
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
