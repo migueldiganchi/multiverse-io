@@ -49,7 +49,7 @@ function EditStoryContent({ slug }: { slug: string }) {
   const [saving, setSaving] = useState(false);
   const [activeVersion, setActiveVersion] = useState<Version | null>(null);
   const [showNewVersion, setShowNewVersion] = useState(false);
-  const [preview, setPreview] = useState(false);
+  const [preview, setPreview] = useState(true);
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiResult, setAiResult] = useState('');
   const [aiStatus, setAiStatus] = useState('');
@@ -94,8 +94,13 @@ function EditStoryContent({ slug }: { slug: string }) {
         if (d.story) {
           setStory(d.story);
           const newChapter = new URLSearchParams(window.location.search).get('new') === 'chapter';
-          if (newChapter) setShowNewVersion(true);
-          else if (d.story.versions.length > 0) setActiveVersion(d.story.versions[0]);
+          if (newChapter) {
+            setShowNewVersion(true);
+            setPreview(false);
+          } else if (d.story.versions.length > 0) {
+            setActiveVersion(d.story.versions[0]);
+            setPreview(true);
+          }
         }
         setLoading(false);
       })
@@ -278,7 +283,7 @@ function EditStoryContent({ slug }: { slug: string }) {
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-mono tracking-widest text-[var(--text-dim)]">VERSIONS</span>
               <button
-                onClick={() => { setShowNewVersion(true); setActiveVersion(null); }}
+                onClick={() => { setShowNewVersion(true); setActiveVersion(null); setPreview(false); }}
                 className="text-xs text-[var(--aurora)] hover:text-[var(--text)] flex items-center gap-1 transition-colors"
               >
                 <Plus size={11} /> Add
@@ -289,7 +294,7 @@ function EditStoryContent({ slug }: { slug: string }) {
               {story.versions.map((v, i) => (
                 <button
                   key={v._id}
-                  onClick={() => { setActiveVersion(v); setShowNewVersion(false); }}
+                  onClick={() => { setActiveVersion(v); setShowNewVersion(false); setPreview(true); }}
                   className={`w-full text-left p-3 border text-sm transition-all ${
                     activeVersion?._id === v._id && !showNewVersion
                       ? 'border-[var(--aurora)] bg-[var(--surface)] text-[var(--text)]'
@@ -337,6 +342,7 @@ function EditStoryContent({ slug }: { slug: string }) {
                   </div>
                 </div>
 
+                <fieldset disabled={preview} className="contents">
                 <input
                   type="text"
                   className="input-base"
@@ -538,6 +544,7 @@ function EditStoryContent({ slug }: { slug: string }) {
                     )}
                   </div>
                 </div>
+                </fieldset>
               </>
             )}
 
@@ -545,7 +552,7 @@ function EditStoryContent({ slug }: { slug: string }) {
               <div className="border border-dashed border-[var(--border)] p-12 text-center">
                 <GitBranch className="mx-auto mb-3 text-[var(--muted)]" size={28} />
                 <p className="text-sm text-[var(--text-dim)] mb-4">Select a version to edit, or add a new one.</p>
-                <button onClick={() => setShowNewVersion(true)} className="btn-ghost text-sm">
+                <button onClick={() => { setShowNewVersion(true); setPreview(false); }} className="btn-ghost text-sm">
                   <Plus size={14} /> Add first version
                 </button>
               </div>
